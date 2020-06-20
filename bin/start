@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -e
+
+# NOTE: The canonical source for this file is in the clinico-omics/tservice repository.
+
+# General
+if [ -z "$PORT" ]; then
+    export PORT=3000
+fi
+
+if [ -z "$WORKDIR" ]; then
+    export TSERVICE_WORKDIR=$HOME
+else
+    export TSERVICE_WORKDIR=$WORKDIR
+fi
+
+# For default working directory
+mkdir -p "$TSERVICE_WORKDIR"/upload "$TSERVICE_WORKDIR"/download
+
+# Java options
+JAVA_OPTS="$JAVA_OPTS -XX:+IgnoreUnrecognizedVMOptions" # Don't barf if we see an option we don't understand (e.g. Java 9 option on Java 7/8)
+JAVA_OPTS="$JAVA_OPTS -Djava.awt.headless=true"         # don't try to start AWT. Not sure this does anything but better safe than wasting memory
+JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8"            # Use UTF-8
+
+echo "Using these JAVA_OPTS: ${JAVA_OPTS}"
+
+# Auto migrate database schema
+java -jar ./target/uberjar/tservice.jar migrate
+
+exec java $JAVA_OPTS -jar ./target/uberjar/tservice.jar
