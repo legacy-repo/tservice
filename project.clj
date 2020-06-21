@@ -4,6 +4,8 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
+                 [org.clojure/tools.namespace "1.0.0"]
+                 [org.clojure/tools.cli "0.4.2" :exclusions [org.clojure/clojure]]
                  [org.clojure/core.async "0.4.500"
                   :exclusions [org.clojure/tools.reader]]
                  [cheshire "5.10.0"]
@@ -29,6 +31,9 @@
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.7.0"]
+                 [luminus-jetty "0.1.7"
+                  :exclusions [clj-time joda-time org.clojure/clojure]]
+                 [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
@@ -41,33 +46,41 @@
                  [ring/ring-servlet "1.7.1"]
                  [selmer "1.12.27"]]
 
+  :repositories [["central" "https://maven.aliyun.com/repository/central"]
+                 ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
+                 ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]]
+
+  :plugin-repositories [["central" "https://maven.aliyun.com/repository/central"]
+                        ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
+                        ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]]
+
   :min-lein-version "2.0.0"
-  
+
   :source-paths ["src/clj"]
   :test-paths ["test/clj"]
   :resource-paths ["resources"]
   :target-path "target/%s/"
   :main ^:skip-aot tservice.core
 
-  :plugins [[lein-uberwar "0.2.0"]] 
+  :plugins [[lein-uberwar "0.2.0"]]
   :uberwar
   {:handler tservice.handler/app
    :init tservice.handler/init
    :destroy tservice.handler/destroy
    :name "tservice.war"}
-  
+
 
   :profiles
-  {:uberjar {:omit-source true
+  {:uberjar {:omit-source false
              :aot :all
              :uberjar-name "tservice.jar"
-             :source-paths ["env/prod/clj" ]
+             :source-paths ["env/prod/clj"]
              :resource-paths ["env/prod/resources"]}
 
    :dev           [:project/dev :profiles/dev]
    :test          [:project/dev :project/test :profiles/test]
 
-   :project/dev  {:jvm-opts ["-Dconf=dev-config.edn" ]
+   :project/dev  {:jvm-opts ["-Dconf=dev-config.edn"]
                   :dependencies [[directory-naming/naming-java "0.8"]
                                  [luminus-jetty "0.1.9"]
                                  [pjstadig/humane-test-output "0.10.0"]
@@ -75,15 +88,15 @@
                                  [ring/ring-devel "1.8.1"]
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
-                                 [jonase/eastwood "0.3.5"]] 
-                  
-                  :source-paths ["env/dev/clj" ]
+                                 [jonase/eastwood "0.3.5"]]
+
+                  :source-paths ["env/dev/clj"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user
                                  :timeout 120000}
                   :injections [(require 'pjstadig.humane-test-output)
                                (pjstadig.humane-test-output/activate!)]}
-   :project/test {:jvm-opts ["-Dconf=test-config.edn" ]
-                  :resource-paths ["env/test/resources"] }
+   :project/test {:jvm-opts ["-Dconf=test-config.edn"]
+                  :resource-paths ["env/test/resources"]}
    :profiles/dev {}
    :profiles/test {}})

@@ -15,7 +15,7 @@ ENV LC_CTYPE en_US.UTF-8
 # git:     ./bin/version
 # make:    backend building
 # gettext: translations
-
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --update coreutils bash git wget make gettext
 
 # lein:    backend dependencies and building
@@ -51,7 +51,9 @@ ENV LC_CTYPE en_US.UTF-8
 
 # dependencies
 ## zip for zipping dependencies of workflow
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --update bash ttf-dejavu fontconfig libgxps
+RUN apk add ca-certificates && update-ca-certificates && apk add openssl
 
 # add tservice script and uberjar
 RUN mkdir -p bin target/uberjar

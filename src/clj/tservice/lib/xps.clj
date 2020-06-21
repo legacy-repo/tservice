@@ -13,13 +13,15 @@
    for discussion of an undesirable 1-minute wait that can occur before
    your standalone Clojure program exits if you do not use shutdown-agents.
    More details: https://clojuredocs.org/clojure.java.shell/sh#example-542692d6c026201cdc3270e7
+
+   Fix Bug: 
+     MUST NOT use shutdown-agents, it will cause the problem which the FutureTask was not completed but agent is down.'
   "
   [cmd from to]
   (try
     (shell/sh cmd from to)
     (catch Exception e
-      (log/debug (str "Exception: " (.toString e))))
-    (finally (shutdown-agents))))
+      (log/debug (str "Exception: " (.toString e))))))
 
 (defn xps2png
   "Convert XPS to PDF."

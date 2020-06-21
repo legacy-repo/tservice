@@ -98,7 +98,11 @@ function self_install {
   fi
   msg "Downloading Leiningen to $LEIN_JAR now..."
   mkdir -p "$(dirname "$LEIN_JAR")"
-  LEIN_URL="https://github.com/technomancy/leiningen/releases/download/$LEIN_VERSION/leiningen-$LEIN_VERSION-standalone.zip"
+  if [ "$LEIN_VERSION" == "2.9.3" ]; then
+    LEIN_URL="https://nordata-cdn.oss-cn-shanghai.aliyuncs.com/choppy/leiningen-2.9.3-standalone.zip"
+  else
+    LEIN_URL="https://github.com/technomancy/leiningen/releases/download/$LEIN_VERSION/leiningen-$LEIN_VERSION-standalone.zip"
+  fi
   $HTTP_CLIENT "$LEIN_JAR.pending" "$LEIN_URL"
   local exit_code=$?
   if [ $exit_code == 0 ]; then
