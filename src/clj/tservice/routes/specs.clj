@@ -20,7 +20,7 @@
 
 (s/def ::filepath
   (st/spec
-   {:spec                (s/or :string string? :regex #"^[a-zA-Z0-9_]+.*")
+   {:spec                (s/or :string string? :regex #"^file:\/\/(\/|\.\/)[a-zA-Z0-9_]+.*")
     :type                :string
     :description         "File path for covertor."
     :swagger/default     nil
@@ -30,3 +30,7 @@
   "A spec for the body parameters."
   (s/keys :req-un [::filepath]
           :opt-un [::pdf-mode ::zip-mode]))
+
+(def ballgown2exp-params-body
+  "A spec for the body parameters."
+  (s/keys :req-un [::filepath]))

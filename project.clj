@@ -44,6 +44,7 @@
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-servlet "1.7.1"]
+                 [org.clojure/data.csv "1.0.0"]
                  [selmer "1.12.27"]]
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]

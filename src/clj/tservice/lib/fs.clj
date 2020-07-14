@@ -387,13 +387,13 @@
    (Files/createDirectory (as-path path)
                           (->file-attributes {:posix-file-permissions posix-file-permissions}))))
 
-(defn create-directories
+(defn create-directories!
   "Warning: Setting posix-file-permissions on create will not always
   result in the permissions you specify. This is a limitation of the
   implementation. To guarantee those permissions you should set the
   permissions as another step after creating the file."
   ([path]
-   (create-directories path {}))
+   (create-directories! path {}))
   ([path {:keys [posix-file-permissions]}]
    (Files/createDirectories (as-path path)
                             (->file-attributes {:posix-file-permissions posix-file-permissions}))))

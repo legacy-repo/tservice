@@ -68,13 +68,12 @@
                          (doseq [file files]
                            (let [filename (:filename file)
                                  tempfile (:tempfile file)
-
                                  to-dir (fs-lib/join-paths (get-workdir)
                                                            "upload"
                                                            uuid)
                                  to-path (fs-lib/join-paths to-dir filename)]
                              (log/debug "Upload file: " filename)
-                             (fs-lib/create-directories to-dir)
+                             (fs-lib/create-directories! to-dir)
                              (fs-lib/copy tempfile to-path)))
                          {:status 201
                           :body {:upload-path (fs-lib/join-paths "upload" uuid)
@@ -84,7 +83,7 @@
    ["/xps2pdf"
     {:post {:summary "Convert xps to pdf."
             :parameters {:body specs/xps2pdf-params-body}
-            :responses {200 {:body {:download-url string? :files [string?] :log-url string?}}}
+            :responses {201 {:body {:download-url string? :files [string?] :log-url string?}}}
             :handler (fn [{{{:keys [filepath]} :body} :parameters}]
                        (let [workdir (get-workdir)
                              from-path (fs-lib/join-paths workdir (str/replace filepath #"^\/" ""))  ; fs-lib/join-paths need a relative path
@@ -97,11 +96,30 @@
                              to-files (vec (map #(fs-lib/join-paths to-dir (str (fs/base-name % ".xps") ".pdf")) from-files))
                              zip-path (fs-lib/join-paths relative-dir "merged.zip")
                              pdf-path (fs-lib/join-paths relative-dir "merged.pdf")]
-                         (fs-lib/create-directories to-dir)
+                         (fs-lib/create-directories! to-dir)
                          (events/publish-event! :batchxps2pdf-convert {:from-files from-files :to-dir to-dir})
                          {:status 201
                           :body {:download-url relative-dir
                                  :files (vec (map #(str/replace % (re-pattern workdir) "") to-files))
                                  :log-url (fs-lib/join-paths relative-dir "log")
                                  :zip-url zip-path
-                                 :pdf-url pdf-path}}))}}]])
+                                 :pdf-url pdf-path}}))}}]
+
+   ["/ballgown2exp"
+    {:post {:summary "Convert ballgown files to experiment table."
+            :parameters {:body specs/ballgown2exp-params-body}
+            :responses {201 {:body {:download-url string? :log-url string?}}}
+            :handler (fn [{{{:keys [filepath]} :body} :parameters}]
+                       (let [workdir (get-workdir)
+                             from-path (if (re-matches #"^file:\/\/\/.*" filepath)
+                                         ; Absolute path with file://
+                                         (str/replace filepath #"^file:\/\/" "")
+                                         (fs-lib/join-paths workdir (str/replace filepath #"^file:\/\/" "")))
+                             relative-dir (fs-lib/join-paths "download" (u/uuid))
+                             to-dir (fs-lib/join-paths workdir relative-dir)
+                             ballgown-dir (fs-lib/join-paths to-dir "ballgown")]
+                         (fs-lib/create-directories! ballgown-dir)
+                         (events/publish-event! :ballgown2exp-convert {:from from-path :to to-dir})
+                         {:status 201
+                          :body {:download-url (fs-lib/join-paths relative-dir "fpkm.txt")
+                                 :log-url (fs-lib/join-paths relative-dir "log")}}))}}]])
