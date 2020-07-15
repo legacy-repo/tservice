@@ -27,12 +27,10 @@
   (shell/with-sh-env {:PATH   (get-path-variable)
                       :LC_ALL "en_US.utf-8"
                       :LANG   "en_US.utf-8"}
-    (if (exist-bin? "rnaseq2report.R")
-      (let [command ["bash" "-c"
-                     (format "rnaseq2report.R %s %s %s" exp-table-file phenotype-file result-dir)]
-            result  (apply sh command)]
-        result)
-      {:exit 1
-       :out   ""
-       :err   "Command not found: rnaseq2report."})))
-
+    (let [command ["bash" "-c"
+                   (format "rnaseq2report.R %s %s %s" exp-table-file phenotype-file result-dir)]
+          result  (apply sh command)
+          status (if (= (:exit result) 0) "Success" "Error")
+          msg (str (:out result) "\n" (:err result))]
+      {:status status
+       :msg msg})))

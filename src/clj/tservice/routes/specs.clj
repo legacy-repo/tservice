@@ -20,7 +20,7 @@
 
 (s/def ::filepath
   (st/spec
-   {:spec                (s/or :string string? :regex #(re-matches #"^file:\/\/(\/|\.\/)[a-zA-Z0-9_]+.*" %))
+   {:spec                (s/and string? #(re-matches #"^file:\/\/(\/|\.\/)[a-zA-Z0-9_]+.*" %))
     :type                :string
     :description         "File path for covertor."
     :swagger/default     nil

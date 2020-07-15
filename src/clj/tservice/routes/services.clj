@@ -20,6 +20,7 @@
    [tservice.routes.specs :as specs]
    [clojure.string :as str]
    [clojure.data.csv :as csv]
+   [clojure.data.json :as json]
    [clojure.java.io :as io]))
 
 (defn service-routes []
@@ -77,7 +78,7 @@
                              (fs-lib/create-directories! to-dir)
                              (fs-lib/copy tempfile to-path)))
                          {:status 201
-                          :body {:upload-path (fs-lib/join-paths "upload" uuid)
+                          :body {:upload_path (str "file://./" (fs-lib/join-paths "upload" uuid))
                                  :files (map #(:filename %) files)
                                  :total (count files)}}))}}]
 
@@ -87,7 +88,10 @@
             :responses {201 {:body {:download_url string? :files [string?] :log_url string?}}}
             :handler (fn [{{{:keys [filepath]} :body} :parameters}]
                        (let [workdir (get-workdir)
-                             from-path (fs-lib/join-paths workdir (str/replace filepath #"^\/" ""))  ; fs-lib/join-paths need a relative path
+                             from-path (if (re-matches #"^file:\/\/\/.*" filepath)
+                                         ; Absolute path with file://
+                                         (str/replace filepath #"^file:\/\/" "")
+                                         (fs-lib/join-paths workdir (str/replace filepath #"^file:\/\/" "")))
                              from-files (if (fs-lib/directory? from-path)
                                           (filter #(fs-lib/regular-file? %)
                                                   (map #(.getPath %) (file-seq (io/file from-path))))
@@ -96,13 +100,16 @@
                              to-dir (fs-lib/join-paths workdir relative-dir)
                              to-files (vec (map #(fs-lib/join-paths to-dir (str (fs/base-name % ".xps") ".pdf")) from-files))
                              zip-path (fs-lib/join-paths relative-dir "merged.zip")
-                             pdf-path (fs-lib/join-paths relative-dir "merged.pdf")]
+                             pdf-path (fs-lib/join-paths relative-dir "merged.pdf")
+                             log-path (fs-lib/join-paths relative-dir "log")]
                          (fs-lib/create-directories! to-dir)
+                         ; Launch the batchxps2pdf-convert
+                         (spit log-path (json/write-str {:status "Running" :msg ""}))
                          (events/publish-event! :batchxps2pdf-convert {:from-files from-files :to-dir to-dir})
                          {:status 201
                           :body {:download_url relative-dir
                                  :files (vec (map #(str/replace % (re-pattern workdir) "") to-files))
-                                 :log_url (fs-lib/join-paths relative-dir "log")
+                                 :log_url log-path
                                  :zip_url zip-path
                                  :pdf_url pdf-path}}))}}]
 
@@ -120,15 +127,18 @@
                              to-dir (fs-lib/join-paths workdir relative-dir)
                              phenotype-filepath (fs-lib/join-paths to-dir "phenotype.txt")
                              phenotype-data (cons ["sample_id" "group"]
-                                                  (map vector (:sample_id phenotype) (:group phenotype)))]
+                                                  (map vector (:sample_id phenotype) (:group phenotype)))
+                             log-path (fs-lib/join-paths relative-dir "log")]
                          (log/info phenotype phenotype-data)
                          (fs-lib/create-directories! to-dir)
                          (with-open [file (io/writer phenotype-filepath)]
                            (csv/write-csv file phenotype-data :separator \tab))
+                         ; Launch the ballgown2exp
+                         (spit log-path (json/write-str {:status "Running" :msg ""}))
                          (events/publish-event! :ballgown2exp-convert
                                                 {:ballgown-dir from-path
                                                  :phenotype-filepath phenotype-filepath
                                                  :dest-dir to-dir})
                          {:status 201
                           :body {:download_url (fs-lib/join-paths relative-dir "fpkm.txt")
-                                 :log_url (fs-lib/join-paths relative-dir "log")}}))}}]])
+                                 :log_url log-path}}))}}]])
