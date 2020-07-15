@@ -19,6 +19,7 @@
    [ring.util.http-response :refer :all]
    [tservice.routes.specs :as specs]
    [clojure.string :as str]
+   [clojure.data.csv :as csv]
    [clojure.java.io :as io]))
 
 (defn service-routes []
@@ -83,7 +84,7 @@
    ["/xps2pdf"
     {:post {:summary "Convert xps to pdf."
             :parameters {:body specs/xps2pdf-params-body}
-            :responses {201 {:body {:download-url string? :files [string?] :log-url string?}}}
+            :responses {201 {:body {:download_url string? :files [string?] :log_url string?}}}
             :handler (fn [{{{:keys [filepath]} :body} :parameters}]
                        (let [workdir (get-workdir)
                              from-path (fs-lib/join-paths workdir (str/replace filepath #"^\/" ""))  ; fs-lib/join-paths need a relative path
@@ -99,17 +100,17 @@
                          (fs-lib/create-directories! to-dir)
                          (events/publish-event! :batchxps2pdf-convert {:from-files from-files :to-dir to-dir})
                          {:status 201
-                          :body {:download-url relative-dir
+                          :body {:download_url relative-dir
                                  :files (vec (map #(str/replace % (re-pattern workdir) "") to-files))
-                                 :log-url (fs-lib/join-paths relative-dir "log")
-                                 :zip-url zip-path
-                                 :pdf-url pdf-path}}))}}]
+                                 :log_url (fs-lib/join-paths relative-dir "log")
+                                 :zip_url zip-path
+                                 :pdf_url pdf-path}}))}}]
 
    ["/ballgown2exp"
     {:post {:summary "Convert ballgown files to experiment table."
             :parameters {:body specs/ballgown2exp-params-body}
-            :responses {201 {:body {:download-url string? :log-url string?}}}
-            :handler (fn [{{{:keys [filepath]} :body} :parameters}]
+            :responses {201 {:body {:download_url string? :log_url string?}}}
+            :handler (fn [{{{:keys [filepath phenotype]} :body} :parameters}]
                        (let [workdir (get-workdir)
                              from-path (if (re-matches #"^file:\/\/\/.*" filepath)
                                          ; Absolute path with file://
@@ -117,9 +118,17 @@
                                          (fs-lib/join-paths workdir (str/replace filepath #"^file:\/\/" "")))
                              relative-dir (fs-lib/join-paths "download" (u/uuid))
                              to-dir (fs-lib/join-paths workdir relative-dir)
-                             ballgown-dir (fs-lib/join-paths to-dir "ballgown")]
-                         (fs-lib/create-directories! ballgown-dir)
-                         (events/publish-event! :ballgown2exp-convert {:from from-path :to to-dir})
+                             phenotype-filepath (fs-lib/join-paths to-dir "phenotype.txt")
+                             phenotype-data (cons ["sample_id" "group"]
+                                                  (map vector (:sample_id phenotype) (:group phenotype)))]
+                         (log/info phenotype phenotype-data)
+                         (fs-lib/create-directories! to-dir)
+                         (with-open [file (io/writer phenotype-filepath)]
+                           (csv/write-csv file phenotype-data :separator \tab))
+                         (events/publish-event! :ballgown2exp-convert
+                                                {:ballgown-dir from-path
+                                                 :phenotype-filepath phenotype-filepath
+                                                 :dest-dir to-dir})
                          {:status 201
-                          :body {:download-url (fs-lib/join-paths relative-dir "fpkm.txt")
-                                 :log-url (fs-lib/join-paths relative-dir "log")}}))}}]])
+                          :body {:download_url (fs-lib/join-paths relative-dir "fpkm.txt")
+                                 :log_url (fs-lib/join-paths relative-dir "log")}}))}}]])

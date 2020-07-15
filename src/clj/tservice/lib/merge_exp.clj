@@ -59,7 +59,7 @@
         headers (map name columns)
         rows (mapv #(mapv % columns) row-data)]
     (with-open [file (io/writer path)]
-      (csv/write-csv file (cons headers rows)))))
+      (csv/write-csv file (cons headers rows) :separator \tab))))
 
 (defn merge-exp-files!
   "Assumption: all files have the same GENE_ID list, no matter what order."
@@ -67,7 +67,3 @@
   (->> (read-csvs files)
        (merge-exp)
        (write-csv! path)))
-
-(defn call-rnaseq-r2r
-  [input-file output-file]
-  (comment))

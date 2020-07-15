@@ -158,6 +158,7 @@ get_rna_report_table <- function(df_exp, rt_group, gene_covert_table, main_dir) 
     df_exp_id <- data.frame(cbind(row.names(df_exp), df_exp), stringsAsFactors = FALSE)
     colnames(df_exp_id)[1] <- "Ensembl_ID"
     df_exp_mul_id <- merge(gene_covert_table, df_exp_id, by = "Ensembl_ID")
+
     write.table(df_exp_mul_id, file = paste(main_dir, '/GeneExpression/gene_expression_fpkm.txt', sep = ''),
                 row.names = FALSE, col.names = TRUE, sep = '\t', quote = FALSE)
 
@@ -203,21 +204,31 @@ get_rna_report_table <- function(df_exp, rt_group, gene_covert_table, main_dir) 
   }
 }
 
+get_exe_path <- function() {
+  initial.options <- commandArgs(trailingOnly = FALSE)
+  file.arg.name <- "--file="
+  script.name <- sub(file.arg.name, "", initial.options[grep(file.arg.name, initial.options)])
+  script.dirname <- dirname(script.name)
+  return(script.dirname)
+}
+
 args <- commandArgs(T)
 
-if (length(args) < 4) {
+if (length(args) < 3) {
   stop("At least four argument must be supplied (input file).", call. = FALSE)
 } else {
   exp_table_file <- args[1]
   phenotype_file <- args[2]
-  anno_file <- args[3]
-  result_dir <- args[4]
+  result_dir <- args[3]
 
   if (file_test('-f', exp_table_file) &&
       file_test('-f', phenotype_file) &&
-      file_test('-f', anno_file) &&
       file_test('-d', result_dir)) {
-    rt_exp_g <- read.csv(exp_table_file, sep = '\t', header = TRUE)
+
+    exe_path <- get_exe_path()
+    anno_file <- file.path(exe_path, "references", "gene_id_convert_table_rnaseq_latest.txt")
+
+    rt_exp_g <- read.csv(exp_table_file, sep = '\t', header = TRUE, row.names = 1)
     rt_group <- read.csv(phenotype_file, sep = '\t', header = TRUE)
     gene_covert_table <- read.csv(anno_file, sep = '\t', header = TRUE)
 
