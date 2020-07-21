@@ -104,7 +104,7 @@
                              log-path (fs-lib/join-paths relative-dir "log")]
                          (fs-lib/create-directories! to-dir)
                          ; Launch the batchxps2pdf-convert
-                         (spit log-path (json/write-str {:status "Running" :msg ""}))
+                         (spit (fs-lib/join-paths workdir log-path) (json/write-str {:status "Running" :msg ""}))
                          (events/publish-event! :batchxps2pdf-convert {:from-files from-files :to-dir to-dir})
                          {:status 201
                           :body {:download_url relative-dir
