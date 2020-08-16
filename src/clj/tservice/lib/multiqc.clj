@@ -1,9 +1,9 @@
 (ns tservice.lib.multiqc
-  (:require [me.raynes.fs :as fs]
-            [clojure.tools.logging :as log]
+  "A wrapper for multiqc instance."
+  (:require [clojure.tools.logging :as log]
             [clojure.string :as clj-str]
-            [tservice.config :refer [env]])
-  (:use [clojure.java.shell :as shell :only [sh]]))
+            [tservice.config :refer [env]]
+            [clojure.java.shell :as shell :refer [sh]]))
 
 (defn exist-bin?
   "True if multiqc is installed, otherwise return false."

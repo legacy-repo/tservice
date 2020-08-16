@@ -42,6 +42,63 @@
     :swagger/default     []
     :reason              "The group must a list."}))
 
+(s/def ::lab
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Lab name."
+    :swagger/default     []
+    :reason              "The lab_name must be string."}))
+
+(s/def ::sequencing_platform
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Sequencing Platform."
+    :swagger/default     []
+    :reason              "The sequencing_platform must be string."}))
+
+(s/def ::sequencing_method
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Sequencing Method"
+    :swagger/default     []
+    :reason              "The sequencing_method must be string."}))
+
+(s/def ::library_protocol
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Library protocol."
+    :swagger/default     []
+    :reason              "The library_protocol must be string."}))
+
+(s/def ::library_kit
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Library kit."
+    :swagger/default     []
+    :reason              "The library_kit must be string."}))
+
+(s/def ::read_length
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Read length"
+    :swagger/default     []
+    :reason              "The read_length must be string."}))
+
+(s/def ::metadata
+  (s/keys :req-un [::lab 
+                   ::sequencing_platform 
+                   ::sequencing_method 
+                   ::library_protocol 
+                   ::library_kit 
+                   ::read_length 
+                   ::date]))
+
 (s/def ::phenotype
   (s/keys :req-un [::sample_id ::group]))
 
@@ -53,3 +110,7 @@
 (def ballgown2exp-params-body
   "A spec for the body parameters."
   (s/keys :req-un [::filepath ::phenotype]))
+
+(def quartet-dna-report-params-body
+  "A spec for the body parameters."
+  (s/keys :req-un [::filepath ::metadata]))

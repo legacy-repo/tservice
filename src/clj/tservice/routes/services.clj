@@ -1,27 +1,27 @@
 (ns tservice.routes.services
   (:require
-   [reitit.swagger :as swagger]
-   [reitit.swagger-ui :as swagger-ui]
-   [reitit.ring.coercion :as coercion]
-   [clojure.spec.alpha :as s]
-   [reitit.coercion.spec :as spec-coercion]
-   [reitit.ring.middleware.muuntaja :as muuntaja]
-   [reitit.ring.middleware.parameters :as parameters]
-   [tservice.middleware.formats :as formats]
-   [tservice.middleware.exception :as exception]
-   [tservice.events :as events]
-   [tservice.config :refer [env get-workdir]]
-   [tservice.util :as u]
-   [me.raynes.fs :as fs]
-   [tservice.lib.fs :as fs-lib]
-   [clojure.tools.logging :as log]
-   [reitit.ring.middleware.multipart :as multipart]
-   [ring.util.http-response :refer :all]
-   [tservice.routes.specs :as specs]
-   [clojure.string :as str]
    [clojure.data.csv :as csv]
    [clojure.data.json :as json]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [clojure.spec.alpha :as s]
+   [clojure.string :as str]
+   [clojure.tools.logging :as log]
+   [me.raynes.fs :as fs]
+   [reitit.coercion.spec :as spec-coercion]
+   [reitit.ring.coercion :as coercion]
+   [reitit.ring.middleware.multipart :as multipart]
+   [reitit.ring.middleware.muuntaja :as muuntaja]
+   [reitit.ring.middleware.parameters :as parameters]
+   [reitit.swagger-ui :as swagger-ui]
+   [reitit.swagger :as swagger]
+   [ring.util.http-response :refer [ok]]
+   [tservice.config :refer [get-workdir]]
+   [tservice.events :as events]
+   [tservice.lib.fs :as fs-lib]
+   [tservice.middleware.exception :as exception]
+   [tservice.middleware.formats :as formats]
+   [tservice.routes.specs :as specs]
+   [tservice.util :as u]))
 
 (defn service-routes []
   ["/api"
@@ -60,6 +60,19 @@
 
    ["/ping"
     {:get (constantly (ok {:message "pong"}))}]
+
+   ["/status/:id"
+    {:get {:summary "Check the status of a specified task."
+           :parameters {}
+           :responses  {200 {:body {:status string?
+                                    :msg string?}}}
+           :handler (fn [{{{:keys [id]} :path} :parameters}]
+                      (let [path (fs-lib/join-paths "download" id)]
+                        (if (fs-lib/exists? path)
+                          {:body (json/read-str (slurp path))
+                           :status 200}
+                          {:body {:msg "No such id."}
+                           :status 404})))}}]
 
    ["/upload"
     {:post {:summary "Uploading File."
@@ -119,10 +132,7 @@
             :responses {201 {:body {:download_url string? :log_url string?}}}
             :handler (fn [{{{:keys [filepath phenotype]} :body} :parameters}]
                        (let [workdir (get-workdir)
-                             from-path (if (re-matches #"^file:\/\/\/.*" filepath)
-                                         ; Absolute path with file://
-                                         (str/replace filepath #"^file:\/\/" "")
-                                         (fs-lib/join-paths workdir (str/replace filepath #"^file:\/\/" "")))
+                             from-path (u/replace-path filepath workdir)
                              relative-dir (fs-lib/join-paths "download" (u/uuid))
                              to-dir (fs-lib/join-paths workdir relative-dir)
                              phenotype-filepath (fs-lib/join-paths to-dir "phenotype.txt")
@@ -140,5 +150,27 @@
                                                  :phenotype-filepath phenotype-filepath
                                                  :dest-dir to-dir})
                          {:status 201
-                          :body {:download_url (fs-lib/join-paths relative-dir "fpkm.txt")
+                          :body {:download_url (fs-lib/join-paths relative-dir)
+                                 :report (fs-lib/join-paths relative-dir "multiqc.html")
+                                 :log_url log-path}}))}}]
+
+   ["/quartet-dna-report"
+    {:post {:summary "Parse the results of the quartet-dna-qc app and generate the report."
+            :parameters {:body specs/quartet-dna-report-params-body}
+            :responses {201 {:body {:download_url string? :log_url string?}}}
+            :handler (fn [{{{:keys [filepath metadata]} :body} :parameters}]
+                       (let [workdir (get-workdir)
+                             from-path (u/replace-path filepath workdir)
+                             relative-dir (fs-lib/join-paths "download" (u/uuid))
+                             to-dir (fs-lib/join-paths workdir relative-dir)
+                             log-path (fs-lib/join-paths relative-dir "log")]
+                         (fs-lib/create-directories! to-dir)
+                         (spit log-path (json/write-str {:status "Running" :msg ""}))
+                         (events/publish-event! :quartet-dna-report-convert
+                                                {:datadir from-path
+                                                 :metadata metadata
+                                                 :dest-dir to-dir})
+                         {:status 201
+                          :body {:download_url (fs-lib/join-paths relative-dir)
+                                 :report (fs-lib/join-paths relative-dir "multiqc.html")
                                  :log_url log-path}}))}}]])

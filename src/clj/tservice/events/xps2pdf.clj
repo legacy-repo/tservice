@@ -1,11 +1,10 @@
 (ns tservice.events.xps2pdf
   (:require [clojure.core.async :as async]
-            [clojure.set :as set]
             [me.raynes.fs :as fs]
             [tservice.lib.fs :as fs-lib]
             [clojure.tools.logging :as log]
             [tservice.lib.xps :as xps-lib]
-            [tservice.util :as u]
+            [clojure.data.json :as json]
             [tservice.events :as events]))
 
 (def spec "")
@@ -30,10 +29,10 @@
   (let [out (xps-lib/xps2pdf from to)
         log-path (fs-lib/join-paths (fs-lib/parent-path to) "log")
         exit (:exit out)
-        stdout (:out out)
-        stderr (:err out)]
-    (spit log-path (str stdout "\n" stderr) :append true)
-    (flush)))
+        status (if (>= exit 0) "Success" "Error")
+        msg (if (>= exit 0) (:err out) (:out out))
+        log (json/write-str {:status status :msg msg})]
+    (spit log-path log)))
 
 (defn- batch-xps2pdf! [from-files to-dir]
   (log/info "Converted xps files in a zip to pdf files.")

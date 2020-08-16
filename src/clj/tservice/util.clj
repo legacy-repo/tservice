@@ -4,14 +4,13 @@
             [colorize.core :as colorize]
             [clojure.java.classpath :as classpath]
             [tservice.plugins.classloader :as classloader]
-            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as clj-str]
             [clojure.tools.logging :as log]
             [clj-uuid :as uuid]
+            [tservice.lib.fs :as fs-lib]
             [clj-time.coerce :as coerce]
-            [clj-time.core :as t]
-            [clj-time.format :as f])
+            [clj-time.core :as t])
   (:import
    [org.apache.commons.compress.archivers.zip ZipFile ZipArchiveEntry]))
 
@@ -95,7 +94,8 @@
 ;; with ca 80k files. Not significantly slower than testing here for
 ;; .isDirectory and only then create the parents. Keeping the nicer
 ;; code with this comment, then.
-(defn unzip-file [zip-file to-dir]
+(defn unzip-file
+  [zip-file to-dir]
   (log/infof "Extracting %s" zip-file)
   (log/debug "  to:" to-dir)
   (with-open [zipf (ZipFile. (io/file zip-file))]
@@ -109,3 +109,10 @@
       (io/make-parents out-file)
       (with-open [entry-o-s (io/output-stream out-file)]
         (io/copy zip-in-s entry-o-s)))))
+
+(defn replace-path
+  [filepath workdir]
+  (if (re-matches #"^file:\/\/\/.*" filepath)
+    ; Absolute path with file://
+    (clj-str/replace filepath #"^file:\/\/" "")
+    (fs-lib/join-paths workdir (clj-str/replace filepath #"^file:\/\/" ""))))

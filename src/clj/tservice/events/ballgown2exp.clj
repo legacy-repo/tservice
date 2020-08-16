@@ -1,14 +1,11 @@
 (ns tservice.events.ballgown2exp
   (:require [clojure.core.async :as async]
-            [clojure.set :as set]
-            [me.raynes.fs :as fs]
             [tservice.lib.fs :as fs-lib]
             [clojure.tools.logging :as log]
             [tservice.lib.filter-files :as ff]
             [tservice.lib.merge-exp :as me]
             [tservice.lib.r2r :as r2r]
             [tservice.lib.multiqc :as mq]
-            [tservice.util :as u]
             [tservice.events :as events]
             [clojure.data.json :as json]))
 
@@ -31,24 +28,23 @@
         result-dir (fs-lib/join-paths dest-dir "results")
         log-path (fs-lib/join-paths dest-dir "log")]
     (try
-      (do
-        (fs-lib/create-directories! ballgown-dir)
-        (fs-lib/create-directories! result-dir)
-        (log/info "Merge these files: " files)
-        (log/info "Merge gene experiment files from ballgown directory to a experiment table: " ballgown-dir exp-filepath)
-        (ff/copy-files! files ballgown-dir {:replace-existing true})
-        (me/merge-exp-files! (ff/list-files ballgown-dir {:mode "file"}) exp-filepath)
-        (log/info "Call R2R: " exp-filepath phenotype-filepath result-dir)
-        (let [r2r-result (r2r/call-r2r! exp-filepath phenotype-filepath result-dir)
-              multiqc-result (when (= (:status r2r-result) "Success")
-                               (mq/multiqc result-dir dest-dir {:title "RNA-seq Report"}))
-              result (if multiqc-result (assoc r2r-result
-                                               :status (:status multiqc-result)
-                                               :msg (str (:msg r2r-result) "\n" (:msg multiqc-result)))
-                         r2r-result)
-              log (json/write-str result)]
-          (log/info "Status: " result)
-          (spit log-path log)))
+      (fs-lib/create-directories! ballgown-dir)
+      (fs-lib/create-directories! result-dir)
+      (log/info "Merge these files: " files)
+      (log/info "Merge gene experiment files from ballgown directory to a experiment table: " ballgown-dir exp-filepath)
+      (ff/copy-files! files ballgown-dir {:replace-existing true})
+      (me/merge-exp-files! (ff/list-files ballgown-dir {:mode "file"}) exp-filepath)
+      (log/info "Call R2R: " exp-filepath phenotype-filepath result-dir)
+      (let [r2r-result (r2r/call-r2r! exp-filepath phenotype-filepath result-dir)
+            multiqc-result (when (= (:status r2r-result) "Success")
+                             (mq/multiqc result-dir dest-dir {:title "RNA-seq Report"}))
+            result (if multiqc-result (assoc r2r-result
+                                             :status (:status multiqc-result)
+                                             :msg (str (:msg r2r-result) "\n" (:msg multiqc-result)))
+                       r2r-result)
+            log (json/write-str result)]
+        (log/info "Status: " result)
+        (spit log-path log))
       (catch Exception e
         (let [log (json/write-str {:status "Error" :msg (.toString e)})]
           (log/info "Status: " log)

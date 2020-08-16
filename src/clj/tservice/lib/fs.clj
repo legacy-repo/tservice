@@ -1,4 +1,5 @@
 (ns tservice.lib.fs
+  "FS library"
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
             [pdfboxing.merge :as pdf]

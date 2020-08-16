@@ -2,11 +2,11 @@
   "Userspace functions you can run by default in your local REPL."
   (:require
    [tservice.config :refer [env]]
-    [clojure.pprint]
-    [clojure.spec.alpha :as s]
-    [expound.alpha :as expound]
-    [mount.core :as mount]
-    [tservice.core :refer [start-app]]))
+   [clojure.pprint]
+   [clojure.spec.alpha :as s]
+   [expound.alpha :as expound]
+   [mount.core :as mount]
+   [tservice.core :refer [start-app]]))
 
 (alter-var-root #'s/*explain-out* (constantly expound/printer))
 

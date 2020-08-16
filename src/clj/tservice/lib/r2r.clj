@@ -1,9 +1,7 @@
 (ns tservice.lib.r2r
-  (:require [me.raynes.fs :as fs]
-            [tservice.config :refer [env]]
-            [clojure.tools.logging :as log]
-            [clojure.string :as clj-str])
-  (:use [clojure.java.shell :as shell :refer [sh]]))
+  "A wrapper for rnaseq2report instance."
+  (:require [tservice.config :refer [env]]
+            [clojure.java.shell :as shell :refer [sh]]))
 
 (defn get-path-variable
   []
