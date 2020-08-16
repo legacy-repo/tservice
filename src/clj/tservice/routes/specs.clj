@@ -90,6 +90,14 @@
     :swagger/default     []
     :reason              "The read_length must be string."}))
 
+(s/def ::date
+  (st/spec
+   {:spec                string?
+    :type                :string
+    :description         "Date"
+    :swagger/default     []
+    :reason              "The date must be string."}))
+
 (s/def ::metadata
   (s/keys :req-un [::lab 
                    ::sequencing_platform 
