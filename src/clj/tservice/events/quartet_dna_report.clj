@@ -5,11 +5,12 @@
             [tservice.lib.filter-files :as ff]
             [tservice.lib.multiqc :as mq]
             [tservice.events :as events]
-            [clojure.data.json :as json]))
+            [clojure.data.json :as json]
+            [clojure.java.io :as io]))
 
 (def ^:const quartet-dna-report-topics
   "The `Set` of event topics which are subscribed to for use in quartet-dna-report tracking."
-  #{:quartet-dna-report-convert})
+  #{:quartet_dna_report-convert})
 
 (def ^:private quartet-dna-report-channel
   "Channel for receiving event quartet-dna-report we want to subscribe to for quartet-dna-report events."
@@ -20,6 +21,7 @@
 (defn- quartet-dna-report!
   "Chaining Pipeline: merge_exp_file -> r2r -> multiqc."
   [datadir metadata dest-dir]
+  (log/info "Generate quartet dna report: " datadir metadata dest-dir)
   (let [metadata-file (fs-lib/join-paths dest-dir
                                          "results"
                                          "data_generation_information.json")
@@ -36,13 +38,14 @@
                                       ".*/precision_recall_snv.txt"
                                       ".*/variant_calling_qc_summary.txt"])
         result-dir (fs-lib/join-paths dest-dir "results")
-        log-path (fs-lib/join-paths dest-dir "log")]
+        log-path (fs-lib/join-paths dest-dir "log")
+        config (.getPath (io/resource "config/quartet_dna_report.yaml"))]
     (try
       (fs-lib/create-directories! result-dir)
       (spit metadata-file (json/write-str metadata))
       (log/info "Copy files to " result-dir)
       (ff/copy-files! files result-dir {:replace-existing true})
-      (let [multiqc-result (mq/multiqc result-dir dest-dir {:title "RNA-seq Report"})
+      (let [multiqc-result (mq/multiqc result-dir dest-dir {:config config :template "quartet_dnaseq_report"})
             result {:status (:status multiqc-result)
                     :msg (:msg multiqc-result)}
             log (json/write-str result)]
@@ -61,7 +64,7 @@
     (when-let [{topic :topic object :item} quartet-dna-report-event]
       ;; TODO: only if the definition changed??
       (case (events/topic->model topic)
-        "quartet-dna-report"  (quartet-dna-report! (:ballgown-dir object) (:phenotype-filepath object) (:dest-dir object))))
+        "quartet_dna_report"  (quartet-dna-report! (:datadir object) (:metadata object) (:dest-dir object))))
     (catch Throwable e
       (log/warn (format "Failed to process quartet-dna-report event. %s" (:topic quartet-dna-report-event)) e))))
 

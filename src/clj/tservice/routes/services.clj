@@ -163,14 +163,14 @@
                              from-path (u/replace-path filepath workdir)
                              relative-dir (fs-lib/join-paths "download" (u/uuid))
                              to-dir (fs-lib/join-paths workdir relative-dir)
-                             log-path (fs-lib/join-paths relative-dir "log")]
+                             log-path (fs-lib/join-paths to-dir "log")]
                          (fs-lib/create-directories! to-dir)
                          (spit log-path (json/write-str {:status "Running" :msg ""}))
-                         (events/publish-event! :quartet-dna-report-convert
+                         (events/publish-event! :quartet_dna_report-convert
                                                 {:datadir from-path
                                                  :metadata metadata
                                                  :dest-dir to-dir})
                          {:status 201
                           :body {:download_url (fs-lib/join-paths relative-dir)
                                  :report (fs-lib/join-paths relative-dir "multiqc.html")
-                                 :log_url log-path}}))}}]])
+                                 :log_url (fs-lib/join-paths relative-dir "log")}}))}}]])

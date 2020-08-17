@@ -53,21 +53,24 @@
                         :title          ''
                         :force?         true
                         :prepend-dirs?  true})"
-  [analysis-dir outdir {:keys [dry-run? filename comment title force? prepend-dirs?]
+  [analysis-dir outdir {:keys [dry-run? filename comment title force? prepend-dirs? template config]
                         :or   {dry-run?      false
                                force?        true
                                prepend-dirs? false
                                filename      "multiqc_report.html"
                                comment       ""
+                               template      "default"
                                title         "iSEQ Analyzer Report"}}]
   (let [force-arg   (if force? "--force" "")
         dirs-arg    (if prepend-dirs? "--dirs" "")
+        config-arg  (if config (str "-c" config) "")
         multiqc-command (filter #(> (count %) 0) ["multiqc"
-                                                  force-arg dirs-arg
+                                                  force-arg dirs-arg config-arg
                                                   "--title" (format "'%s'" title)
                                                   "--comment" (format "'%s'" comment)
                                                   "--filename" filename
                                                   "--outdir" outdir
+                                                  "-t" template
                                                   analysis-dir])
         command-lst ["bash" "-c" (clj-str/join " " multiqc-command)]]
     (if dry-run?

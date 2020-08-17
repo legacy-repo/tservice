@@ -1,0 +1,9 @@
+run_modules:
+  - data_generation_information
+  - performance_assessment
+  - prealignment_qc
+  - postalignment_qc
+  - variant_calling_qc
+  - supplementary
+
+skip_generalstats: true
