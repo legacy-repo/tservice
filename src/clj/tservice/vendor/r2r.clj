@@ -1,4 +1,4 @@
-(ns tservice.lib.r2r
+(ns tservice.vendor.r2r
   "A wrapper for rnaseq2report instance."
   (:require [tservice.config :refer [env]]
             [clojure.java.shell :as shell :refer [sh]]))

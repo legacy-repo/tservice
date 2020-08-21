@@ -1,4 +1,4 @@
-(ns tservice.lib.multiqc
+(ns tservice.vendor.multiqc
   "A wrapper for multiqc instance."
   (:require [clojure.tools.logging :as log]
             [clojure.string :as clj-str]

@@ -1,4 +1,4 @@
-(ns tservice.lib.merge-exp
+(ns tservice.vendor.merge-exp
   "Merge expression files."
   (:require [clojure.data.csv :as csv]
             [clojure.string :as clj-str]

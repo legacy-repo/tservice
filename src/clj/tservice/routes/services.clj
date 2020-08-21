@@ -73,6 +73,17 @@
                            :status 200}
                           {:body {:msg "No such id."}
                            :status 404})))}}]
+   ["/manifest"
+    {:get {:summary "Get the manifest data."
+           :parameters {}
+           :responses {200 {:body any?}}
+           :handler (fn [_]
+                      (let [path (.getPath (io/resource "manifest.json"))]
+                        (if (fs-lib/exists? path)
+                          {:body (json/read-str (slurp path))
+                           :status 200}
+                          {:body {:msg "No manifest file."
+                                  :status 404}})))}}]
 
    ["/upload"
     {:post {:summary "Uploading File."
@@ -127,7 +138,7 @@
                                  :pdf_url pdf-path}}))}}]
 
    ["/ballgown2exp"
-    {:post {:summary "Convert ballgown files to experiment table."
+    {:post {:summary "Convert ballgown files to experiment table and generate report."
             :parameters {:body specs/ballgown2exp-params-body}
             :responses {201 {:body {:download_url string? :log_url string?}}}
             :handler (fn [{{{:keys [filepath phenotype]} :body} :parameters}]
@@ -166,7 +177,7 @@
                              log-path (fs-lib/join-paths to-dir "log")]
                          (fs-lib/create-directories! to-dir)
                          (spit log-path (json/write-str {:status "Running" :msg ""}))
-                         (events/publish-event! :quartet_dna_report-convert
+                         (events/publish-event! :quartet_dnaseq_report-convert
                                                 {:datadir from-path
                                                  :metadata metadata
                                                  :dest-dir to-dir})
