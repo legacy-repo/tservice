@@ -14,6 +14,7 @@
             [tservice
              [config :as config]
              [util :as u]]
+            [tservice.plugin :as plugin]
             [tservice.plugins.classloader :as classloader]))
 
 ;;; --------------------------------------------------- LIFECYCLE ----------------------------------------------------
@@ -36,18 +37,22 @@
         (log/info "Starting events listener:" (u/format-color 'blue ns-symb) "👂")
         (init-fn)))))
 
-(defn find-event-handlers
+(defn- load-plugin-handlers!
+  "Search plugin directory and call their `events-init` function if it exists"
   []
-  (log/info "Load manifest for all event-handlers.")
-  (->> @u/tservice-namespace-symbols
-       (filter #(.startsWith (name %) "tservice.events."))
-       (map (fn [ns-symb] (eval (read-string (str ns-symb "/" "manifest")))))))
+  (log/info "is-test?: %s" config/is-test?)
+  (when-not config/is-test?
+    (doseq [plugin (plugin/get-plugins)]
+      (when-let [init-fn (plugin/load-init-fn plugin)]
+        (log/info "Starting events listener:" (u/format-color 'blue plugin) "👂")
+        (init-fn)))))
 
 (defn initialize-events!
   "Initialize the asynchronous internal events system."
   []
   (when-not @events-initialized?
-    (find-and-load-event-handlers!)
+    (find-and-load-event-handlers!)  ; Internal event handlers
+    (load-plugin-handlers!)          ; External event handlers in plugin directory
     (reset! events-initialized? true)))
 
 (defn stop-events!

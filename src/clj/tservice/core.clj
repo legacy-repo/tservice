@@ -1,5 +1,6 @@
 (ns tservice.core
   (:require
+   [tservice.plugin :as plugin]  ; plugin must be loaded before handler
    [tservice.handler :as handler]
    [tservice.nrepl :as nrepl]
    [tservice.events :as events]
@@ -12,11 +13,11 @@
 
 ;; log uncaught exceptions in threads
 (Thread/setDefaultUncaughtExceptionHandler
-  (reify Thread$UncaughtExceptionHandler
-    (uncaughtException [_ thread ex]
-      (log/error {:what :uncaught-exception
-                  :exception ex
-                  :where (str "Uncaught exception on" (.getName thread))}))))
+ (reify Thread$UncaughtExceptionHandler
+   (uncaughtException [_ thread ex]
+     (log/error {:what :uncaught-exception
+                 :exception ex
+                 :where (str "Uncaught exception on" (.getName thread))}))))
 
 (def cli-options
   [["-p" "--port PORT" "Port number"
@@ -31,9 +32,9 @@
 (mount/defstate ^{:on-reload :noop} http-server
   :start
   (http/start
-    (-> env
-        (assoc  :handler (handler/app))
-        (update :port #(or (-> env :options :port) %))))
+   (-> env
+       (assoc  :handler (handler/app))
+       (update :port #(or (-> env :options :port) %))))
   :stop
   (http/stop http-server))
 

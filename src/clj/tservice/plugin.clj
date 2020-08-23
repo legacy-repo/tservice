@@ -1,0 +1,152 @@
+(ns tservice.plugin
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
+            [tservice.lib.fs :as fs]
+            [clojure.java.io :as io]
+            [tservice.config :refer [env]]
+            [mount.core :as mount]))
+
+(defn- clj-file?
+  [file-path]
+  (str/ends-with? (.getName file-path) ".clj"))
+
+(defn- lib-file?
+  [file-path]
+  (and (clj-file? file-path)
+       (str/ends-with? file-path (format "libs/%s" (.getName file-path)))))
+
+(defn- plugin?
+  [file-path]
+  (and (clj-file? file-path)
+       (not (str/ends-with? file-path (format "libs/%s" (.getName file-path))))))
+
+(defonce ^:private repo
+  (atom "/etc/vcftool/plugins"))
+
+(defonce ^:private plugins-metadata
+  (atom nil))
+
+(defonce ^:private plugins
+  (atom nil))
+
+(defn get-repo
+  []
+  @repo)
+
+(defn get-plugins-metadata
+  []
+  @plugins-metadata)
+
+(defn get-plugins
+  []
+  @plugins)
+
+(defn get-routes
+  []
+  (filter some? (map #(:route %) @plugins-metadata)))
+
+(defn get-manifest
+  []
+  (filter some? (map #(:manifest %) @plugins-metadata)))
+
+(defn- list-plugins
+  []
+  (map
+   (fn [path] (str/replace (first (str/split path #"\.")) #"_" "-"))
+   (mapv #(.getName %)
+         (filter #(and (.isFile %)
+                       (plugin? %))
+                 (file-seq (io/file @repo))))))
+
+(defn- setup-repo
+  "Sets the location of the local clojure repository used
+   by `load-plugins` or `load-plugin`"
+  ([path] (reset! repo (fs/expand-home path)))
+  ([] (setup-repo (:tservice-plugin-path env))))
+
+(defn- setup-plugins
+  []
+  (reset! plugins (list-plugins)))
+
+(defn- setup-plugins-metadata
+  [metadata]
+  (reset! plugins-metadata metadata))
+
+(defn- load-plugin-metadata
+  "TODO: Need to check metadata format?"
+  [name]
+  (let [metadata (find-var (symbol (str name "/" "metadata")))]
+    (when metadata
+      (deref metadata))))
+
+(defn- load-plugins-metadata
+  []
+  (doseq [plugin @plugins]
+    (let [metadata (load-plugin-metadata plugin)]
+      (if metadata
+        (setup-plugins-metadata (cons metadata @plugins-metadata))
+        (log/warn (format "%s is not a valid plugin: not found metadata" plugin))))))
+
+(defn- match-name?
+  [name file-path]
+  (and
+   (clj-file? file-path)
+   (= (format "%s.clj" name) (.getName file-path))))
+
+(defn- load-libs
+  "Plugin may be a event-handler or a library file. Only event-handler contains metadata and events-init function"
+  ([] (load-libs lib-file?))
+  ([filter-fn]
+   (let [path (fs/join-paths @repo "libs")]
+     (if (fs/directory? path)
+       (run! #(load-file (.getAbsolutePath %))
+             (filter
+              filter-fn
+              (rest (file-seq (java.io.File. path)))))
+       (throw (Exception. (format "No such path: %s" path)))))))
+
+(defn- load-plugins
+  "Plugin may be a event-handler or a library file. Only event-handler contains metadata and events-init function"
+  ([] (load-plugins plugin?))
+  ([filter-fn]
+   (if (or (fs/directory? @repo) (fs/regular-file? @repo))
+     (run! #(load-file (.getAbsolutePath %))
+           (filter
+            filter-fn
+            (rest (file-seq (java.io.File. @repo)))))
+     (throw (Exception. (format "No such path: %s" @repo))))))
+
+(defn setup
+  []
+  (setup-repo)
+  (setup-plugins)
+  (load-libs)  ; Must load all libs before you load plugins
+  (load-plugins)  ; Must load all plugins before you want to get metadata from plugin
+  (load-plugins-metadata))
+
+(defn start-plugins!
+  []
+  (when (or (nil? @plugins) (nil? @plugins-metadata))
+    (setup)))
+
+(defn stop-plugins!
+  []
+  (when (not-any? nil? [@repo @plugins @plugins-metadata])
+    (reset! repo "/etc/vcftool/plugins")
+    (reset! plugins nil)
+    (reset! plugins-metadata nil)))
+
+(defn load-plugin
+  [name]
+  (load-plugins (partial match-name? name)))
+
+(defn load-init-fn
+  [name]
+  (find-var (symbol (str name "/" "events-init"))))
+
+; Must mount plugin before event
+(mount/defstate plugin
+  :start
+  (start-plugins!)
+  :stop
+  (stop-plugins!))

@@ -8,13 +8,10 @@
    [ring.middleware.webjars :refer [wrap-webjars]]
    [tservice.env :refer [defaults]]
    [ring.middleware.file :refer [wrap-file]]
-   [reitit.ring.middleware.multipart :as multipart]
    [mount.core :as mount]
-   [tservice.util :as u]
-   [tservice.lib.fs :as fs-lib]
-   [clojure.java.io :as io]
    [clojure.tools.logging :as log]
-   [tservice.config :refer [env get-workdir]]))
+   [tservice.config :refer [get-workdir]]
+   [tservice.plugin :as plugin]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) (fn [])))
@@ -44,7 +41,8 @@
    (ring/router
     [["/" {:get
            {:handler (constantly {:status 301 :headers {"Location" "/api/api-docs/index.html"}})}}]
-     (service-routes)
+     ; TODO: Duplicated routes?
+     (concat (service-routes) (plugin/get-routes))
      ["/download/*" (-> (ring/create-resource-handler {:path "/"})
                         (wrap-file (get-workdir)))]])
 
