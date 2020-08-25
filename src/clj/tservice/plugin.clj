@@ -15,10 +15,16 @@
   (and (clj-file? file-path)
        (str/ends-with? file-path (format "libs/%s" (.getName file-path)))))
 
+(defn- wrapper-file?
+  [file-path]
+  (and (clj-file? file-path)
+       (str/ends-with? file-path (format "wrappers/%s" (.getName file-path)))))
+
 (defn- plugin?
   [file-path]
   (and (clj-file? file-path)
-       (not (str/ends-with? file-path (format "libs/%s" (.getName file-path))))))
+       (not (str/ends-with? file-path (format "libs/%s" (.getName file-path))))
+       (not (str/ends-with? file-path (format "wrappers/%s" (.getName file-path))))))
 
 (defonce ^:private repo
   (atom "/etc/vcftool/plugins"))
@@ -94,7 +100,7 @@
    (= (format "%s.clj" name) (.getName file-path))))
 
 (defn- load-libs
-  "Plugin may be a event-handler or a library file. Only event-handler contains metadata and events-init function"
+  "Load library files for wrappers or plugins."
   ([] (load-libs lib-file?))
   ([filter-fn]
    (let [path (fs/join-paths @repo "libs")]
@@ -105,8 +111,20 @@
               (rest (file-seq (java.io.File. path)))))
        (throw (Exception. (format "No such path: %s" path)))))))
 
+(defn- load-wrappers
+  "Load wrapper files for plugins."
+  ([] (load-wrappers wrapper-file?))
+  ([filter-fn]
+   (let [path (fs/join-paths @repo "wrappers")]
+     (if (fs/directory? path)
+       (run! #(load-file (.getAbsolutePath %))
+             (filter
+              filter-fn
+              (rest (file-seq (java.io.File. path)))))
+       (throw (Exception. (format "No such path: %s" path)))))))
+
 (defn- load-plugins
-  "Plugin may be a event-handler or a library file. Only event-handler contains metadata and events-init function"
+  "Load plugins, echo plugin is an event-handler file that contains metadata and events-init function"
   ([] (load-plugins plugin?))
   ([filter-fn]
    (if (or (fs/directory? @repo) (fs/regular-file? @repo))
@@ -120,7 +138,8 @@
   []
   (setup-repo)
   (setup-plugins)
-  (load-libs)  ; Must load all libs before you load plugins
+  (load-libs)  ; Must load all libs before you load wrappers.
+  (load-wrappers)  ; Must load all wrappers before you load plugins.
   (load-plugins)  ; Must load all plugins before you want to get metadata from plugin
   (load-plugins-metadata))
 
