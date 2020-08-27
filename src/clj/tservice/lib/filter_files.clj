@@ -37,7 +37,7 @@
 (defn objects->links
   [protocol bucket objects mode]
   (->> objects
-       (map #(make-link protocol bucket (:Key %)))
+       (map #(make-link protocol bucket (:key %)))
        (filter #(re-matches (filter-remote-fn mode) %))))
 
 (defn list-files
@@ -48,7 +48,7 @@
         is-service? (fs-service? path)]
     (if is-service?
       (->> (clj-fs/with-conn protocol (clj-fs/list-objects bucket prefix))
-           (map #(make-link protocol bucket (:Key %)))
+           (map #(make-link protocol bucket (:key %)))
            (filter #(re-matches (filter-remote-fn mode) %)))
       (->> (io/file path)
            file-seq

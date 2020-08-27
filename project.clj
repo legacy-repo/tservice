@@ -1,4 +1,4 @@
-(defproject tservice "0.1.2"
+(defproject tservice "0.1.3"
 
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
@@ -46,7 +46,7 @@
                  [ring/ring-servlet "1.7.1"]
                  [org.clojure/data.csv "1.0.0"]
                  [selmer "1.12.27"]
-                 [clj-filesystem "0.2.2"]]
+                 [clj-filesystem "0.2.5"]]
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
