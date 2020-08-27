@@ -45,11 +45,13 @@
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-servlet "1.7.1"]
                  [org.clojure/data.csv "1.0.0"]
-                 [selmer "1.12.27"]]
+                 [selmer "1.12.27"]
+                 [clj-filesystem "0.2.2"]]
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
-                 ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]]
+                 ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]
+                 ["clojars-official" "https://clojars.org/repo/"]]
 
   :plugin-repositories [["central" "https://maven.aliyun.com/repository/central"]
                         ["jcenter" "https://maven.aliyun.com/repository/jcenter"]

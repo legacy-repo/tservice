@@ -3,8 +3,7 @@
             [clojure.tools.logging :as log]
             [tservice.lib.fs :as fs]
             [clojure.java.io :as io]
-            [tservice.config :refer [env]]
-            [mount.core :as mount]))
+            [tservice.config :refer [env]]))
 
 (defn- clj-file?
   [file-path]
@@ -162,10 +161,3 @@
 (defn load-init-fn
   [name]
   (find-var (symbol (str name "/" "events-init"))))
-
-; Must mount plugin before event
-(mount/defstate plugin
-  :start
-  (start-plugins!)
-  :stop
-  (stop-plugins!))

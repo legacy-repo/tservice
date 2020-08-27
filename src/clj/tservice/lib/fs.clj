@@ -309,6 +309,17 @@
                                              :copy-attributes copy-attributes
                                              :nofollow-links nofollow-links}))))
 
+(defn safe-copy
+  ;; For fs service
+  [from to opts]
+  (let [options (merge {:replace-existing false} opts)]
+    (if (or (:replace-existing options)
+            (= false (.exists to)))
+      (try
+        (= nil (clojure.java.io/copy from to))
+        (catch Exception e (str "exception: " (.getMessage e))))
+      false)))
+
 (defn ^:private copy-all
   [copy-options copies]
   (doseq [[from to] copies]
@@ -362,7 +373,7 @@
   ([from to {:keys [replace-existing
                     atomic-move]}]
    (Files/move (as-path from) (as-path to) (->copy-options
-                                            {:replace-existing replace-existing,
+                                            {:replace-existing replace-existing
                                              :atomic-move atomic-move}))))
 
 (defn rename

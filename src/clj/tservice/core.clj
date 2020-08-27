@@ -1,6 +1,6 @@
 (ns tservice.core
   (:require
-   [tservice.plugin :as plugin]  ; plugin must be loaded before handler
+   [tservice.setup :as setup]  ; setup must be loaded before handler
    [tservice.handler :as handler]
    [tservice.nrepl :as nrepl]
    [tservice.events :as events]

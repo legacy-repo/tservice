@@ -112,7 +112,10 @@
 
 (defn replace-path
   [filepath workdir]
-  (if (re-matches #"^file:\/\/\/.*" filepath)
-    ; Absolute path with file://
-    (clj-str/replace filepath #"^file:\/\/" "")
-    (fs-lib/join-paths workdir (clj-str/replace filepath #"^file:\/\/" ""))))
+  (cond
+    ;; Absolute path
+    (re-matches #"^file:\/\/\/.*" filepath) (clj-str/replace filepath #"^file:\/\/" "")
+    ;; Relative path
+    (re-matches #"^file:\/\/\..*" filepath) (fs-lib/join-paths workdir (clj-str/replace filepath #"^file:\/\/" ""))
+    ;; File serivce
+    :else filepath))
