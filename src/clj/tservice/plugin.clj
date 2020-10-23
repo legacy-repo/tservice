@@ -46,13 +46,27 @@
   []
   @plugins)
 
+(defn merge-plugins-metadata
+  []
+  (let [metadata (apply merge-with into (filter #(:routes %) @plugins-metadata))
+        routes (:routes metadata)
+        manifests (:manifests metadata)]
+    (concat []
+            (filter #(:route %) @plugins-metadata)
+            (map (fn [route manifest] {:route route :manifest manifest})
+                 routes manifests))))
+
 (defn get-routes
   []
-  (filter some? (map #(:route %) @plugins-metadata)))
+  (->> (merge-plugins-metadata)
+       (map #(:route %))
+       (filter some?)))
 
 (defn get-manifest
   []
-  (filter some? (map #(:manifest %) @plugins-metadata)))
+  (->> (merge-plugins-metadata)
+       (map #(:manifest %))
+       (filter some?)))
 
 (defn- list-plugins
   []
@@ -137,9 +151,9 @@
   []
   (setup-repo)
   (setup-plugins)
-  (load-libs)  ; Must load all libs before you load wrappers.
-  (load-wrappers)  ; Must load all wrappers before you load plugins.
-  (load-plugins)  ; Must load all plugins before you want to get metadata from plugin
+  (load-libs)               ; Must load all libs before you load wrappers.
+  (load-wrappers)           ; Must load all wrappers before you load plugins.
+  (load-plugins)            ; Must load all plugins before you want to get metadata from plugin
   (load-plugins-metadata))
 
 (defn start-plugins!
