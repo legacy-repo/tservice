@@ -25,7 +25,7 @@
     | :archived_time     | false     | Bigint
     | :report_path       | false     | A relative path of a report based on the report directory
     | :report_type       | true      | multiqc
-    | :status            | true      | Started, Finished, Submitted, Archived, Failed
+    | :status            | true      | Started, Finished, Archived, Failed
   Description:
     Create a new report record and then return the number of affected rows.
   Examples: 
@@ -85,18 +85,14 @@ WHERE id = :id
     1. why we need to use :one as the :result
       Because the result will be ({:count 0}), when we use :raw to replace :one.
 */
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+/* :require [tservice.db.sql-helper :as sql-helper] */
 SELECT COUNT(id)
 FROM tservice_report
 /*~
 ; TODO: May be raise error, when the value of :query-map is unqualified.
-(when (:query-map params) 
- (str "WHERE "
-  (string/join " AND "
-    (for [[field _] (:query-map params)]
-      (str (identifier-param-quote (name field) options)
-        " = :v:query-map." (name field))))))
+(cond
+  (:query-map params) (sql-helper/where-clause (:query-map params) options)
+  (:where-clause params) ":snip:where-clause")
 ~*/
 
 
@@ -116,17 +112,14 @@ FROM tservice_report
     1. Maybe we need to support OR/LIKE/IS NOT/etc. expressions in WHERE clause.
     2. Maybe we need to use exact field name to replace *.
 */
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+/* :require [tservice.db.sql-helper :as sql-helper] */
 SELECT * 
 FROM tservice_report
 /*~
-(when (:query-map params) 
- (str "WHERE "
-  (string/join " AND "
-    (for [[field _] (:query-map params)]
-      (str (identifier-param-quote (name field) options)
-        " = :v:query-map." (name field))))))
+; TODO: May be raise error, when the value of :query-map is unqualified.
+(cond
+  (:query-map params) (sql-helper/where-clause (:query-map params) options)
+  (:where-clause params) ":snip:where-clause")
 ~*/
 ORDER BY id
 --~ (when (and (:limit params) (:offset params)) "LIMIT :limit OFFSET :offset")

@@ -3,7 +3,10 @@
    [clojure.java.jdbc :as jdbc]
    [tservice.db.core :refer [*db*] :as db]
    [clojure.tools.logging :as log]
-   [tservice.util :as util]))
+   [tservice.util :as util]
+   [clojure.data.json :as json]
+   [tservice.config :refer [get-workdir]]
+   [tservice.lib.fs :as fs-lib]))
 
 (defn- filter-query-map
   "Filter unqualified attribute or value.
@@ -89,5 +92,12 @@
                          :finished_time nil
                          :archived_time nil
                          :report_type report-type
-                         :status "Submitted"
+                         :status "Started"
                          :log nil}))))
+
+(defn sync-report [uuid]
+  (let [report (search-report uuid)
+        report-path (str (:report_path report))
+        path (fs-lib/join-paths (get-workdir (:report_type report)) report-path "log")]
+    (when (fs-lib/exists? path)
+      (json/read-str (slurp path) :key-fn keyword))))

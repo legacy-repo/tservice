@@ -31,7 +31,7 @@ COMMENT ON COLUMN tservice_report.report_path IS 'A relative path of a report ba
 COMMENT ON COLUMN tservice_report.report_type IS 'multiqc';
 
 --;;
-COMMENT ON COLUMN tservice_report.status IS 'Started, Finished, Submitted, Archived, Failed';
+COMMENT ON COLUMN tservice_report.status IS 'Started, Finished, Archived, Failed';
 
 --;;
 CREATE TABLE IF NOT EXISTS tservice_tag (

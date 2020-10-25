@@ -130,11 +130,11 @@
 
 (s/def ::status
   (st/spec
-   {:spec                #(#{"Started" "Finished" "Submitted" "Archived" "Failed"} %)
+   {:spec                #(#{"Started" "Finished" "Archived" "Failed"} %)
     :type                :string
     :description         "Filter results by status field."
     :swagger/default     "Started"
-    :reason              "Not valid status, only support Started, Finished, Submitted, Archived, Failed."}))
+    :reason              "Not valid status, only support Started, Finished, Archived, Failed."}))
 
 (s/def ::report-id
   (st/spec

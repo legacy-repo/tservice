@@ -1,6 +1,5 @@
 (ns tservice.routes.services
-  (:require [clojure.data.json :as json]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.spec.alpha :as s]
             [clojure.tools.logging :as log]
             [reitit.coercion.spec :as spec-coercion]
             [reitit.ring.coercion :as coercion]
@@ -9,7 +8,7 @@
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.swagger :as swagger]
-            [ring.util.http-response :refer [ok]]
+            [ring.util.http-response :refer [ok not-found]]
             [tservice.config :refer [get-workdir]]
             [tservice.lib.fs :as fs-lib]
             [tservice.middleware.exception :as exception]
@@ -92,14 +91,11 @@
            :responses  {200 {:body {:status string?
                                     :msg string?}}}
            :handler (fn [{{{:keys [uuid]} :path} :parameters}]
-                      (let [report (db-handler/search-report uuid)
-                            report-path (str (:report_path report))
-                            path (fs-lib/join-paths (get-workdir (:report_type report)) report-path "log")]
-                        (if (fs-lib/exists? path)
-                          {:body (json/read-str (slurp path) :key-fn keyword)
-                           :status 200}
-                          {:body {:msg "No such uuid."}
-                           :status 404})))}}]
+                      (let [log (db-handler/sync-report uuid)]
+                        (if (nil? log)
+                          (not-found {:msg "No such uuid."})
+                          (ok log))))}}]
+
    ["/manifest"
     {:tags ["Utility"]
      :get {:summary "Get the manifest data."

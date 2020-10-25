@@ -45,6 +45,7 @@
                  [luminus-jetty "0.1.7"
                   :exclusions [clj-time joda-time org.clojure/clojure]]
                  [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
+                 [honeysql "1.0.444"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
