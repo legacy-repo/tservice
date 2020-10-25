@@ -18,11 +18,10 @@
     | :id                | true/uniq | UUID string
     | :report_name       | true      | The report name, required, [a-zA-Z0-9]+
     | :project_id        | false     | The id  of the related project
-    | :script            | false     | Auto generated script for making a report
+    | :app_name          | false     | Auto generated script for making a report
     | :description       | false     | A description of the report
     | :started_time      | true      | Bigint
     | :finished_time     | false     | Bigint
-    | :checked_time      | false     | Bigint
     | :archived_time     | false     | Bigint
     | :report_path       | false     | A relative path of a report based on the report directory
     | :report_type       | true      | multiqc
@@ -32,8 +31,8 @@
   Examples: 
     Clojure: (create-report! {})
 */
-INSERT INTO tservice_report (id, report_name, project_id, script, started_time, finished_time, checked_time, archived_time, report_path, report_type, description, report_id, log, status)
-VALUES (:id, :report_name, :project_id, :script, :started_time, :finished_time, :checked_time, :archived_time, :report_path, :report_type, :description, :report_id, :log, :status)
+INSERT INTO tservice_report (id, report_name, project_id, app_name, started_time, finished_time, archived_time, report_path, report_type, description, log, status)
+VALUES (:id, :report_name, :project_id, :app_name, :started_time, :finished_time, :archived_time, :report_path, :report_type, :description, :log, :status)
 RETURNING id
 
 
@@ -147,10 +146,9 @@ ORDER BY id
       SELECT  tservice_report.id,
               tservice_report.report_name,
               tservice_report.project_id,
-              tservice_report.script,
+              tservice_report.app_name,
               tservice_report.started_time,
               tservice_report.finished_time,
-              tservice_report.checked_time,
               tservice_report.archived_time,
               tservice_report.report_path,
               tservice_report.log,
@@ -172,10 +170,9 @@ ORDER BY id
 SELECT  tservice_report.id,
         tservice_report.report_name,
         tservice_report.project_id,
-        tservice_report.script,
+        tservice_report.app_name,
         tservice_report.started_time,
         tservice_report.finished_time,
-        tservice_report.checked_time,
         tservice_report.archived_time,
         tservice_report.report_path,
         tservice_report.log,
