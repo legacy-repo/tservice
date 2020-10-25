@@ -23,9 +23,19 @@
 (def ^Boolean is-test? "Are we running in `test` mode (i.e. via `lein test`)?"                    (= "test" (:tservice-run-mode env)))
 
 (defn get-workdir
-  []
-  (fs/expand-home (get-in env [:tservice-workdir])))
+  ([]
+   (fs/expand-home (get-in env [:tservice-workdir])))
+  ([type]
+   (cond
+     (= type "Graph") (fs/expand-home (get-in env [:proxy-server-dir]))
+     (= type "Tool") (get-workdir)
+     (= type "Report") (get-workdir)
+     :else (get-workdir))))
 
 (defn get-proxy-server
   []
   (get-in env [:proxy-server]))
+
+(defn get-plugin-dir
+  []
+  (get-in env [:tservice-plugin-path]))

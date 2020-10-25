@@ -4,11 +4,10 @@ CREATE TABLE IF NOT EXISTS tservice_report (
   id VARCHAR(36) PRIMARY KEY,
   report_name VARCHAR(64) NOT NULL UNIQUE,
   project_id VARCHAR(36),
-  script TEXT,
+  app_name VARCHAR(64) NOT NULL,
   description TEXT,
   started_time BIGINT NOT NULL,
   finished_time BIGINT,
-  checked_time BIGINT,
   archived_time BIGINT,
   report_path VARCHAR(255),
   report_type VARCHAR(32) NOT NULL,
@@ -23,7 +22,7 @@ COMMENT ON TABLE tservice_report IS 'Used for report.';
 COMMENT ON COLUMN tservice_report.id IS 'uuid for report';
 
 --;;
-COMMENT ON COLUMN tservice_report.script IS 'Auto generated script for making a report';
+COMMENT ON COLUMN tservice_report.app_name IS 'Auto generated script for making a report';
 
 --;;
 COMMENT ON COLUMN tservice_report.report_path IS 'A relative path of a report based on the report directory';
@@ -32,7 +31,7 @@ COMMENT ON COLUMN tservice_report.report_path IS 'A relative path of a report ba
 COMMENT ON COLUMN tservice_report.report_type IS 'multiqc';
 
 --;;
-COMMENT ON COLUMN tservice_report.status IS 'Started, Finished, Submitted, Archived, Failed';
+COMMENT ON COLUMN tservice_report.status IS 'Started, Finished, Archived, Failed';
 
 --;;
 CREATE TABLE IF NOT EXISTS tservice_tag (
@@ -42,12 +41,12 @@ CREATE TABLE IF NOT EXISTS tservice_tag (
 );
 
 --;;
-COMMENT ON TABLE tservice_tag IS 'Used for tagging project/app/report etc.';
+COMMENT ON TABLE tservice_tag IS 'Used for tagging report etc.';
 
 --;;
 CREATE TABLE IF NOT EXISTS tservice_entity_tag (
   id SERIAL NOT NULL,
-  -- entity_id may contains choppy_app id, project id and report id etc.
+  -- entity_id may contains report id etc.
   entity_id VARCHAR(32),
   entity_type VARCHAR(32),
   tag_id INT,

@@ -18,22 +18,21 @@
     | :id                | true/uniq | UUID string
     | :report_name       | true      | The report name, required, [a-zA-Z0-9]+
     | :project_id        | false     | The id  of the related project
-    | :script            | false     | Auto generated script for making a report
+    | :app_name          | false     | Auto generated script for making a report
     | :description       | false     | A description of the report
     | :started_time      | true      | Bigint
     | :finished_time     | false     | Bigint
-    | :checked_time      | false     | Bigint
     | :archived_time     | false     | Bigint
     | :report_path       | false     | A relative path of a report based on the report directory
     | :report_type       | true      | multiqc
-    | :status            | true      | Started, Finished, Submitted, Archived, Failed
+    | :status            | true      | Started, Finished, Archived, Failed
   Description:
     Create a new report record and then return the number of affected rows.
   Examples: 
     Clojure: (create-report! {})
 */
-INSERT INTO tservice_report (id, report_name, project_id, script, started_time, finished_time, checked_time, archived_time, report_path, report_type, description, report_id, log, status)
-VALUES (:id, :report_name, :project_id, :script, :started_time, :finished_time, :checked_time, :archived_time, :report_path, :report_type, :description, :report_id, :log, :status)
+INSERT INTO tservice_report (id, report_name, project_id, app_name, started_time, finished_time, archived_time, report_path, report_type, description, log, status)
+VALUES (:id, :report_name, :project_id, :app_name, :started_time, :finished_time, :archived_time, :report_path, :report_type, :description, :log, :status)
 RETURNING id
 
 
@@ -86,18 +85,14 @@ WHERE id = :id
     1. why we need to use :one as the :result
       Because the result will be ({:count 0}), when we use :raw to replace :one.
 */
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+/* :require [tservice.db.sql-helper :as sql-helper] */
 SELECT COUNT(id)
 FROM tservice_report
 /*~
 ; TODO: May be raise error, when the value of :query-map is unqualified.
-(when (:query-map params) 
- (str "WHERE "
-  (string/join " AND "
-    (for [[field _] (:query-map params)]
-      (str (identifier-param-quote (name field) options)
-        " = :v:query-map." (name field))))))
+(cond
+  (:query-map params) (sql-helper/where-clause (:query-map params) options)
+  (:where-clause params) ":snip:where-clause")
 ~*/
 
 
@@ -117,17 +112,14 @@ FROM tservice_report
     1. Maybe we need to support OR/LIKE/IS NOT/etc. expressions in WHERE clause.
     2. Maybe we need to use exact field name to replace *.
 */
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+/* :require [tservice.db.sql-helper :as sql-helper] */
 SELECT * 
 FROM tservice_report
 /*~
-(when (:query-map params) 
- (str "WHERE "
-  (string/join " AND "
-    (for [[field _] (:query-map params)]
-      (str (identifier-param-quote (name field) options)
-        " = :v:query-map." (name field))))))
+; TODO: May be raise error, when the value of :query-map is unqualified.
+(cond
+  (:query-map params) (sql-helper/where-clause (:query-map params) options)
+  (:where-clause params) ":snip:where-clause")
 ~*/
 ORDER BY id
 --~ (when (and (:limit params) (:offset params)) "LIMIT :limit OFFSET :offset")
@@ -147,10 +139,9 @@ ORDER BY id
       SELECT  tservice_report.id,
               tservice_report.report_name,
               tservice_report.project_id,
-              tservice_report.script,
+              tservice_report.app_name,
               tservice_report.started_time,
               tservice_report.finished_time,
-              tservice_report.checked_time,
               tservice_report.archived_time,
               tservice_report.report_path,
               tservice_report.log,
@@ -172,10 +163,9 @@ ORDER BY id
 SELECT  tservice_report.id,
         tservice_report.report_name,
         tservice_report.project_id,
-        tservice_report.script,
+        tservice_report.app_name,
         tservice_report.started_time,
         tservice_report.finished_time,
-        tservice_report.checked_time,
         tservice_report.archived_time,
         tservice_report.report_path,
         tservice_report.log,

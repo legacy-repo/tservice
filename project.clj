@@ -31,9 +31,21 @@
                  [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.7.0"]
+                 [org.postgresql/postgresql "42.2.8"]
+                 [cheshire "5.9.0" :exclusions [org.clojure/clojure]]
+                 [clojure.java-time "0.3.2"]
+                 [conman "0.8.4"
+                  :exclusions [org.clojure/java.jdbc
+                               org.clojure/clojure]]
+                 [clojurewerkz/quartzite "2.1.0"
+                  :exclusions [org.clojure/clojure]]                                ; scheduling library
+                 [conman "0.8.4"
+                  :exclusions [org.clojure/java.jdbc
+                               org.clojure/clojure]]
                  [luminus-jetty "0.1.7"
                   :exclusions [clj-time joda-time org.clojure/clojure]]
                  [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
+                 [honeysql "1.0.444"]
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
