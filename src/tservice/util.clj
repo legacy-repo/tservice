@@ -119,3 +119,8 @@
     (re-matches #"^file:\/\/\..*" filepath) (fs-lib/join-paths workdir (clj-str/replace filepath #"^file:\/\/" ""))
     ;; File serivce
     :else filepath))
+
+(defn rand-str [n]
+  (clj-str/join
+   (repeatedly n
+               #(rand-nth "abcdefghijklmnopqrstuvwxyz0123456789"))))

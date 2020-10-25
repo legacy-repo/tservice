@@ -59,8 +59,8 @@
 
   :min-lein-version "2.0.0"
 
-  :source-paths ["src/clj"]
-  :test-paths ["test/clj"]
+  :source-paths ["src"]
+  :test-paths ["test"]
   :resource-paths ["resources"]
   :target-path "target/%s/"
   :main ^:skip-aot tservice.core
@@ -77,7 +77,7 @@
   {:uberjar {:omit-source false
              :aot :all
              :uberjar-name "tservice.jar"
-             :source-paths ["env/prod/clj"]
+             :source-paths ["env/prod"]
              :resource-paths ["env/prod/resources"]}
 
    :dev           [:project/dev :profiles/dev]
@@ -93,7 +93,7 @@
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
                                  [jonase/eastwood "0.3.5"]]
 
-                  :source-paths ["env/dev/clj"]
+                  :source-paths ["env/dev"]
                   :resource-paths ["env/dev/resources"]
                   :repl-options {:init-ns user
                                  :timeout 120000}

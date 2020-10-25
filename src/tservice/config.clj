@@ -25,3 +25,7 @@
 (defn get-workdir
   []
   (fs/expand-home (get-in env [:tservice-workdir])))
+
+(defn get-proxy-server
+  []
+  (get-in env [:proxy-server]))

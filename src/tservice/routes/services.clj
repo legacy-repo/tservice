@@ -42,7 +42,7 @@
 
    ;; swagger documentation
    ["" {:no-doc true
-        :swagger {:info {:title "my-api"
+        :swagger {:info {:title "API Service for Tservice"
                          :description "https://cljdoc.org/d/metosin/reitit"}}}
 
     ["/swagger.json"
@@ -54,10 +54,12 @@
              :config {:validator-url nil}})}]]
 
    ["/ping"
-    {:get (constantly (ok {:message "pong"}))}]
+    {:tags ["Utility"]
+     :get (constantly (ok {:message "pong"}))}]
 
    ["/status/:uuid"
-    {:get {:summary "Check the status of a specified task."
+    {:tags ["Utility"]
+     :get {:summary "Check the status of a specified task."
            :parameters {:path specs/uuid-spec}
            :responses  {200 {:body {:status string?
                                     :msg string?}}}
@@ -69,7 +71,8 @@
                           {:body {:msg "No such uuid."}
                            :status 404})))}}]
    ["/manifest"
-    {:get {:summary "Get the manifest data."
+    {:tags ["Utility"]
+     :get {:summary "Get the manifest data."
            :parameters {}
            :responses {200 {:body any?}}
            :handler (fn [_]
@@ -80,7 +83,8 @@
                           {:body {:msg "No manifest file."
                                   :status 404}})))}}]
    ["/upload"
-    {:post {:summary "Uploading File."
+    {:tags ["File Management"]
+     :post {:summary "Uploading File."
             :parameters {:multipart {:files (s/or :file multipart/temp-file-part :files (s/coll-of multipart/temp-file-part))}}
             :handler (fn [{{{:keys [files]} :multipart} :parameters}]
                        (let [uuid (u/uuid)

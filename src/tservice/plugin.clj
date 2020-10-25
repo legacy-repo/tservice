@@ -26,7 +26,7 @@
        (not (str/ends-with? file-path (format "wrappers/%s" (.getName file-path))))))
 
 (defonce ^:private repo
-  (atom "/etc/vcftool/plugins"))
+  (atom "/etc/vcftool"))
 
 (defonce ^:private plugins-metadata
   (atom nil))
@@ -46,28 +46,51 @@
   []
   @plugins)
 
+(defn merge-plugins-metadata
+  []
+  (let [metadata (apply merge-with into (filter #(:routes %) @plugins-metadata))
+        routes (:routes metadata)
+        manifests (:manifests metadata)]
+    (concat []
+            (filter #(:route %) @plugins-metadata)
+            (map (fn [route manifest] {:route route :manifest manifest})
+                 routes manifests))))
+
 (defn get-routes
   []
-  (filter some? (map #(:route %) @plugins-metadata)))
+  (->> (merge-plugins-metadata)
+       (map #(:route %))
+       (filter some?)))
 
 (defn get-manifest
   []
-  (filter some? (map #(:manifest %) @plugins-metadata)))
+  (->> (merge-plugins-metadata)
+       (map #(:manifest %))
+       (filter some?)))
+
+(defn- path->ns
+  [path]
+  (-> path
+      (str/split #"\.")
+      (first)
+      (str/replace #"/" ".")
+      (str/replace #"_" "-")))
 
 (defn- list-plugins
   []
-  (map
-   (fn [path] (str/replace (first (str/split path #"\.")) #"_" "-"))
-   (mapv #(.getName %)
-         (filter #(and (.isFile %)
-                       (plugin? %))
-                 (file-seq (io/file @repo))))))
+  (mapv (fn [file] (-> (str/replace (.getAbsolutePath file) 
+                                    (re-pattern @repo) 
+                                    "plugins")
+                       (path->ns)))
+        (filter #(and (.isFile %)
+                      (plugin? %))
+                (file-seq (io/file @repo)))))
 
 (defn- setup-repo
   "Sets the location of the local clojure repository used
    by `load-plugins` or `load-plugin`"
   ([path] (reset! repo (fs/expand-home path)))
-  ([] (setup-repo (:tservice-plugin-path env))))
+  ([] (setup-repo (fs/join-paths (:tservice-plugin-path env) "plugins"))))
 
 (defn- setup-plugins
   []
@@ -86,6 +109,7 @@
 
 (defn- load-plugins-metadata
   []
+  (println @repo @plugins)
   (doseq [plugin @plugins]
     (let [metadata (load-plugin-metadata plugin)]
       (if metadata
@@ -137,10 +161,18 @@
   []
   (setup-repo)
   (setup-plugins)
-  (load-libs)  ; Must load all libs before you load wrappers.
-  (load-wrappers)  ; Must load all wrappers before you load plugins.
-  (load-plugins)  ; Must load all plugins before you want to get metadata from plugin
+  (load-libs)               ; Must load all libs before you load wrappers.
+  (load-wrappers)           ; Must load all wrappers before you load plugins.
+  (load-plugins)            ; Must load all plugins before you want to get metadata from plugin
   (load-plugins-metadata))
+
+(defn load-plugin
+  [name]
+  (load-plugins (partial match-name? name)))
+
+(defn load-init-fn
+  [name]
+  (find-var (symbol (str name "/" "events-init"))))
 
 (defn start-plugins!
   []
@@ -150,14 +182,6 @@
 (defn stop-plugins!
   []
   (when (not-any? nil? [@repo @plugins @plugins-metadata])
-    (reset! repo "/etc/vcftool/plugins")
+    (reset! repo "/etc/vcftool")
     (reset! plugins nil)
     (reset! plugins-metadata nil)))
-
-(defn load-plugin
-  [name]
-  (load-plugins (partial match-name? name)))
-
-(defn load-init-fn
-  [name]
-  (find-var (symbol (str name "/" "events-init"))))
