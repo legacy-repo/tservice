@@ -78,6 +78,7 @@
   :main ^:skip-aot tservice.core
 
   :plugins [[lein-uberwar "0.2.0"]]
+
   :uberwar
   {:handler tservice.handler/app
    :init tservice.handler/init

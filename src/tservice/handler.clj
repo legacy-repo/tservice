@@ -43,6 +43,8 @@
            {:handler (constantly {:status 301 :headers {"Location" "/api/api-docs/index.html"}})}}]
      ; TODO: Duplicated routes?
      (concat (service-routes) (plugin/get-routes))
+     ["/reports/*" (-> (ring/create-resource-handler {:path "/"})
+                       (wrap-file (get-workdir)))]  ; <ROOT>/reports/, for MultiQC HTML file
      ["/download/*" (-> (ring/create-resource-handler {:path "/"})
                         (wrap-file (get-workdir)))]])
 

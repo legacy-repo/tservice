@@ -16,7 +16,8 @@
             [tservice.util :as u]
             [tservice.db.handler :as db-handler]
             [tservice.plugin :as plugin]
-            [tservice.routes.specs :as specs]))
+            [tservice.routes.specs :as specs]
+            [tservice.routes.report :as report-route]))
 
 (defn service-routes []
   ["/api"
@@ -128,4 +129,5 @@
                          {:status 201
                           :body {:upload_path (str "file://./" (fs-lib/join-paths "upload" uuid))
                                  :files (map #(:filename %) files)
-                                 :total (count files)}}))}}]])
+                                 :total (count files)}}))}}]
+   report-route/report])
