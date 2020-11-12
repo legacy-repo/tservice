@@ -25,4 +25,7 @@ JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8"            # Use UTF-8
 
 echo "Using these JAVA_OPTS: ${JAVA_OPTS}"
 
+# Auto migrate database schema
+java $JAVA_OPTS -jar ./target/uberjar/tservice.jar migrate
+
 exec java $JAVA_OPTS -jar ./target/uberjar/tservice.jar
