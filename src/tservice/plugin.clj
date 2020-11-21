@@ -52,9 +52,9 @@
         routes (:routes metadata)
         manifests (:manifests metadata)]
     (concat []
-            (filter #(:route %) @plugins-metadata)
-            (map (fn [route manifest] {:route route :manifest manifest})
-                 routes manifests))))
+            (filter #(or (:route %) (:manifest %)) @plugins-metadata)
+            (map (fn [route] {:route route}) routes)
+            (map (fn [manifest] {:manifest manifest}) manifests))))
 
 (defn get-routes
   []
