@@ -11,6 +11,8 @@
    [mount.core :as mount]
    [clojure.tools.logging :as log]
    [tservice.config :refer [get-workdir]]
+   [reitit.spec :as rs]
+   [reitit.dev.pretty :as pretty]
    [tservice.plugin :as plugin]))
 
 (mount/defstate init-app
@@ -46,7 +48,10 @@
      ["/download/*" (-> (ring/create-resource-handler {:path "/"})
                         (wrap-file (get-workdir)))]
      ; TODO: Duplicated routes?
-     (concat (service-routes) (plugin/get-routes))])
+     (concat (service-routes) (plugin/get-routes))]
+
+    {:validate  rs/validate
+     :exception pretty/exception})
 
    (ring/routes
     (ring/create-resource-handler
