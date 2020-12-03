@@ -27,7 +27,7 @@
    (fs/expand-home (get-in env [:tservice-workdir])))
   ([type]
    (cond
-     (= type "Graph") (fs/expand-home (get-in env [:proxy-server-dir]))
+     (= type "Chart") (fs/expand-home (get-in env [:proxy-server-dir]))
      (= type "Tool") (get-workdir)
      (= type "Report") (get-workdir)
      :else (get-workdir))))
