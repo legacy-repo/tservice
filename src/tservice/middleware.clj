@@ -7,12 +7,21 @@
    [ring.middleware.x-headers :refer [wrap-frame-options]]
    [ring.middleware.defaults :refer [site-defaults wrap-defaults]]))
 
+(defn enable-wrap-cors
+  [handler]
+  (let [origins (:cors-origins env)
+        enabled-cors (:enable-cors env)]
+    (if enabled-cors
+      (wrap-cors handler
+                 :access-control-allow-origin (if (some? origins) (map #(re-pattern %) origins) [#".*"])
+                 :access-control-allow-methods [:get :put :post :delete :options])
+      handler)))
+
 (defn wrap-base [handler]
   (-> ((:middleware defaults) handler)
       (wrap-defaults
        (-> site-defaults
            (assoc-in [:security :anti-forgery] false)
            (assoc-in  [:session :store] (ttl-memory-store (* 60 30)))))
-      (wrap-cors :access-control-allow-origin [#".*"]
-                 :access-control-allow-methods [:get :put :post :delete :options])
+      (enable-wrap-cors)
       (wrap-frame-options {:allow-from "*"})))
