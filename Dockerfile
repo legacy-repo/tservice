@@ -61,7 +61,7 @@ RUN echo "**** install dev packages ****" && \
   \
   echo "**** install Miniconda ****" && \
   bash miniconda.sh -f -b -p "$CONDA_DIR" && \
-  echo "export PATH=$CONDA_DIR/bin:\$PATH" > /etc/profile.d/conda.sh && \
+  echo "export PATH=$PATH:$CONDA_DIR/bin" > /etc/profile.d/conda.sh && \
   \
   echo "**** setup Miniconda ****" && \
   conda update --all --yes && \
@@ -85,11 +85,12 @@ ENV LC_CTYPE en_US.UTF-8
 # dependencies
 ## zip for zipping dependencies of workflow
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-RUN apk add --update bash ttf-dejavu fontconfig libgxps
+# gcc, libc-dev, libxml2 and libxml2-dev for r packages
+RUN apk add --update bash ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev
 RUN apk add ca-certificates && update-ca-certificates && apk add openssl
 
 # Install R-base for tservice plugins
-RUN conda install r-base=3.6.1
+RUN conda install r-base=3.6.3
 
 # add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
