@@ -88,6 +88,9 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/re
 RUN apk add --update bash ttf-dejavu fontconfig libgxps
 RUN apk add ca-certificates && update-ca-certificates && apk add openssl
 
+# Install R-base for tservice plugins
+RUN conda install r-base=3.6.1
+
 # add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
 COPY --from=builder /app/source/target/uberjar/tservice.jar /app/target/uberjar/
