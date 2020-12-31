@@ -51,6 +51,7 @@ ENV PATH="$CONDA_DIR/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Install conda
+COPY condarc /root/.condarc
 RUN echo "**** install dev packages ****" && \
   apk add --no-cache --virtual .build-dependencies bash ca-certificates wget && \
   \
@@ -67,6 +68,8 @@ RUN echo "**** install dev packages ****" && \
   conda update --all --yes && \
   conda config --set auto_update_conda False && \
   \
+  echo "Initialize conda" && \
+  conda init bash && \
   echo "**** cleanup ****" && \
   apk del --purge .build-dependencies && \
   rm -f miniconda.sh && \
@@ -86,16 +89,19 @@ ENV LC_CTYPE en_US.UTF-8
 ## zip for zipping dependencies of workflow
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 # gcc, libc-dev, libxml2 and libxml2-dev for r packages
-RUN apk add --update bash ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev
+RUN apk add --update bash ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev automake git
 RUN apk add ca-certificates && update-ca-certificates && apk add openssl
 
 # Install R-base for tservice plugins
 RUN conda install r-base=3.6.3
 
+# Install Python Environment
+RUN pip3 install poetry
+
 # add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
 COPY --from=builder /app/source/target/uberjar/tservice.jar /app/target/uberjar/
-COPY --from=builder /app/source/bin/start /app/bin/
+COPY --from=builder /app/source/bin /app/bin
 
 # expose our default runtime port
 EXPOSE 3000

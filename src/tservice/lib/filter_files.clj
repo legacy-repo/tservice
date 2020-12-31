@@ -8,13 +8,18 @@
   [filepath]
   (re-matches #"^[a-zA-Z0-9]+:\/\/.*" filepath))
 
+(defn not-empty?
+  [coll]
+  ((complement empty?) coll))
+
 (defn parse-path
   "Parse path and extract protocol, bucket, and object path."
   [path]
   (let [path-lst (rest (re-find (re-matcher #"^([a-zA-Z0-9]+):\/\/([^\/]+)\/(.*)" path)))]
-    {:protocol (first path-lst)
-     :bucket (second path-lst)
-     :prefix (nth path-lst 2)}))
+    (when (not-empty? path-lst)
+      {:protocol (first path-lst)
+       :bucket (second path-lst)
+       :prefix (nth path-lst 2)})))
 
 (defn make-link
   [protocol bucket object]
