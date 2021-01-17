@@ -85,7 +85,7 @@ WORKDIR /app
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
 
-# dependencies
+# Dependencies
 ## zip for zipping dependencies of workflow
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 # gcc, libc-dev, libxml2 and libxml2-dev for r packages
@@ -98,13 +98,13 @@ RUN conda install r-base=3.6.3
 # Install Python Environment
 RUN pip3 install poetry
 
-# add tservice script and uberjar
+# Add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
 COPY --from=builder /app/source/target/uberjar/tservice.jar /app/target/uberjar/
 COPY --from=builder /app/source/bin /app/bin
 
-# expose our default runtime port
+# Expose our default runtime port
 EXPOSE 3000
 
-# run it
+# Run it
 ENTRYPOINT ["/app/bin/start"]

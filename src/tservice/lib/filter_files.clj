@@ -46,13 +46,16 @@
        (filter #(re-matches (filter-remote-fn mode) %))))
 
 (defn list-files
-  "Local path must not contain file:// prefix."
+  "Local path must not contain file:// prefix. options - directory | file"
   [path & options]
   (let [{:keys [mode]} (first options)
         {:keys [protocol bucket prefix]} (parse-path path)
         is-service? (fs-service? path)]
     (if is-service?
-      (->> (clj-fs/with-conn protocol (clj-fs/list-objects bucket prefix))
+      (->> (concat
+            (map (fn [item] (clj-fs/with-conn protocol (clj-fs/list-objects bucket (:key item))))
+                 (clj-fs/with-conn protocol (clj-fs/list-objects bucket prefix true))))
+           (flatten)
            (map #(make-link protocol bucket (:key %)))
            (filter #(re-matches (filter-remote-fn mode) %)))
       (->> (io/file path)
