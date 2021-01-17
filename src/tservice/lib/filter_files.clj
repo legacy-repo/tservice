@@ -112,6 +112,7 @@
 
 (defn copy-remote-file!
   [file-path dest-dir options]
+  ;; TODO: Any options can help to improve the action.
   (let [is-dir? (re-matches #".*\/" file-path)
         filename (basename file-path)
         {:keys [protocol bucket prefix]} (parse-path file-path)]
@@ -120,9 +121,7 @@
         (fs-lib/create-directory dest-dir)
         (map #(copy-remote-file! % dest-dir options)
              (list-files file-path)))
-      (fs-lib/safe-copy (clj-fs/with-conn protocol (clj-fs/get-object bucket prefix))
-                        (io/file (fs-lib/join-paths dest-dir filename))
-                        options))))
+      (clj-fs/with-conn protocol (clj-fs/download-object bucket prefix (fs-lib/join-paths dest-dir filename))))))
 
 (defn copy-files!
   ":replace-existing, :copy-attributes, :nofollow-links"
