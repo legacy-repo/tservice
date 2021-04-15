@@ -17,3 +17,4 @@ profiles.clj
 .vscode
 .clj-kondo
 .lsp
+.calva/
