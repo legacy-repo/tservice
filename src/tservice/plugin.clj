@@ -78,8 +78,8 @@
 
 (defn- list-plugins
   []
-  (mapv (fn [file] (-> (str/replace (.getAbsolutePath file) 
-                                    (re-pattern @repo) 
+  (mapv (fn [file] (-> (str/replace (.getAbsolutePath file)
+                                    (re-pattern @repo)
                                     "plugins")
                        (path->ns)))
         (filter #(and (.isFile %)
@@ -109,7 +109,6 @@
 
 (defn- load-plugins-metadata
   []
-  (println @repo @plugins)
   (doseq [plugin @plugins]
     (let [metadata (load-plugin-metadata plugin)]
       (if metadata
@@ -127,35 +126,33 @@
   ([] (load-libs lib-file?))
   ([filter-fn]
    (let [path (fs/join-paths @repo "libs")]
-     (if (fs/directory? path)
+     (when (and (fs/exists? path) (fs/directory? path))
        (run! #(load-file (.getAbsolutePath %))
              (filter
               filter-fn
-              (rest (file-seq (java.io.File. path)))))
-       (throw (Exception. (format "No such path: %s" path)))))))
+              (rest (file-seq (java.io.File. path)))))))))
 
 (defn- load-wrappers
   "Load wrapper files for plugins."
   ([] (load-wrappers wrapper-file?))
   ([filter-fn]
    (let [path (fs/join-paths @repo "wrappers")]
-     (if (fs/directory? path)
+     (when (and (fs/exists? path) (fs/directory? path))
        (run! #(load-file (.getAbsolutePath %))
              (filter
               filter-fn
-              (rest (file-seq (java.io.File. path)))))
-       (throw (Exception. (format "No such path: %s" path)))))))
+              (rest (file-seq (java.io.File. path)))))))))
 
 (defn- load-plugins
   "Load plugins, echo plugin is an event-handler file that contains metadata and events-init function"
   ([] (load-plugins plugin?))
   ([filter-fn]
-   (if (or (fs/directory? @repo) (fs/regular-file? @repo))
+   (if (and (fs/exists? @repo) (or (fs/directory? @repo) (fs/regular-file? @repo)))
      (run! #(load-file (.getAbsolutePath %))
            (filter
             filter-fn
             (rest (file-seq (java.io.File. @repo)))))
-     (throw (Exception. (format "No such path: %s" @repo))))))
+     (log/warn "Not found any plugins in " @repo))))
 
 (defn setup
   []

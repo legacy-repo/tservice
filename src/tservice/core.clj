@@ -6,7 +6,7 @@
    [tservice.events :as events]
    [luminus.http-server :as http]
    [luminus-migrations.core :as migrations]
-   [tservice.config :refer [env]]
+   [tservice.config :refer [env setup-run-mode!]]
    [clojure.tools.cli :refer [parse-opts]]
    [clojure.tools.logging :as log]
    [mount.core :as mount])
@@ -70,6 +70,7 @@
   (log/info "Starting Tservice in STANDALONE mode")
   ; Load configuration from system-props & env
   (mount/start #'tservice.config/env)
+  (setup-run-mode! env)
   (cond
     ; When the DATABASE_URL variable has been set as "", an exception will be raised.
     ; #error: URI connection string cannot be empty!

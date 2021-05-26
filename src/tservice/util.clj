@@ -29,7 +29,7 @@
     or so namespaces that are part of the tservice project; use this instead for a massive performance increase."
   ;; We want to give JARs in the ./plugins directory a chance to load. At one point we have this as a future so it
   ;; start looking for things in the background while other stuff is happening but that meant plugins couldn't
-  ;; introduce new tservice namespaces such as drivers.
+  ;; introduce new tservice namespaces such as plugins.
   (delay (vec (namespace-symbs*))))
 
 (def ^:private ^{:arglists '([color-symb x])} colorize
@@ -50,6 +50,52 @@
 
   (^String [color format-string & args]
    (colorize color (apply format (str format-string) args))))
+
+(defn one-or-many
+  "Wraps a single element in a sequence; returns sequences as-is. In lots of situations we'd like to accept either a
+  single value or a collection of values as an argument to a function, and then loop over them; rather than repeat
+  logic to check whether something is a collection and wrap if not everywhere, this utility function is provided for
+  your convenience.
+    (u/one-or-many 1)     ; -> [1]
+    (u/one-or-many [1 2]) ; -> [1 2]"
+  [arg]
+  (if ((some-fn sequential? set? nil?) arg)
+    arg
+    [arg]))
+
+(defmacro varargs
+  "Make a properly-tagged Java interop varargs argument. This is basically the same as `into-array` but properly tags
+  the result.
+    (u/varargs String)
+    (u/varargs String [\"A\" \"B\"])"
+  {:style/indent 1, :arglists '([klass] [klass xs])}
+  [klass & [objects]]
+  (vary-meta `(into-array ~klass ~objects)
+             assoc :tag (format "[L%s;" (.getCanonicalName ^Class (ns-resolve *ns* klass)))))
+
+(defmacro prog1
+  "Execute `first-form`, then any other expressions in `body`, presumably for side-effects; return the result of
+  `first-form`.
+    (def numbers (atom []))
+    (defn find-or-add [n]
+      (or (first-index-satisfying (partial = n) @numbers)
+          (prog1 (count @numbers)
+            (swap! numbers conj n))))
+    (find-or-add 100) -> 0
+    (find-or-add 200) -> 1
+    (find-or-add 100) -> 0
+   The result of `first-form` is bound to the anaphor `<>`, which is convenient for logging:
+     (prog1 (some-expression)
+       (println \"RESULTS:\" <>))
+  `prog1` is an anaphoric version of the traditional macro of the same name in
+   [Emacs Lisp](http://www.gnu.org/software/emacs/manual/html_node/elisp/Sequencing.html#index-prog1)
+   and [Common Lisp](http://www.lispworks.com/documentation/HyperSpec/Body/m_prog1c.htm#prog1).
+  Style note: Prefer `doto` when appropriate, e.g. when dealing with Java objects."
+  {:style/indent :defn}
+  [first-form & body]
+  `(let [~'<> ~first-form]
+     ~@body
+     ~'<>))
 
 (defn join-path
   [root path]

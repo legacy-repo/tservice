@@ -1,7 +1,7 @@
-(defproject tservice "0.1.5"
+(defproject tservice "0.2.0"
 
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
+  :description "Make tool as a service."
+  :url "https://github.com/clinico-omics/tservice"
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.namespace "1.0.0"]
@@ -58,7 +58,12 @@
                  [ring/ring-servlet "1.7.1"]
                  [org.clojure/data.csv "1.0.0"]
                  [selmer "1.12.27"]
-                 [clj-filesystem "0.2.7"]]
+                 [clj-filesystem "0.2.7"]
+                 [io.forward/yaml "1.0.9"                                           ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
+                  :exclusions [org.clojure/clojure
+                               org.flatland/ordered
+                               org.yaml/snakeyaml]]
+                 [org.yaml/snakeyaml "1.23"]]                                       ; YAML parser (required by liquibase)
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]

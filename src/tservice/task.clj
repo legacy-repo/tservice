@@ -65,7 +65,7 @@
       (log/info "Loading tasks namespace:" (u/format-color 'blue ns-symb))
       (classloader/require ns-symb)
       (catch Throwable e
-        (log/error e "Error loading tasks namespace {0}" ns-symb)))))
+        (log/error e "Error loading tasks namespace " ns-symb)))))
 
 (defn- init-tasks!
   "Call all implementations of `init!`"
@@ -74,10 +74,10 @@
     (try
       ;; don't bother logging namespace for now, maybe in the future if there's tasks of the same name in multiple
       ;; namespaces we can log it
-      (log/info "Initializing task {0}" (u/format-color 'green (name k)) "📆")
+      (log/info "Initializing task " (u/format-color 'green (name k)) "📆")
       (f k)
       (catch Throwable e
-        (log/error e "Error initializing task {0}" k)))))
+        (log/error e "Error initializing task " k)))))
 
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -159,7 +159,7 @@
   (try
     (when-let [scheduler (scheduler)]
       (when-let [[^Trigger old-trigger] (seq (qs/get-triggers-of-job scheduler (.getKey job)))]
-        (log/debug "Rescheduling job {0}" (-> job .getKey .getName))
+        (log/debug "Rescheduling job " (-> job .getKey .getName))
         (.rescheduleJob scheduler (.getKey old-trigger) new-trigger)))
     (catch Throwable e
       (log/error e "Error rescheduling job"))))

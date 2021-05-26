@@ -27,8 +27,8 @@
   "Search Classpath for namespaces that start with `tservice.events.`, and call their `events-init` function if it
   exists."
   []
-  (log/info "is-test?: %s" config/is-test?)
-  (when-not config/is-test?
+  (log/info "is-test?: %s" (config/is-test?))
+  (when-not (config/is-test?)
     (doseq [ns-symb @u/tservice-namespace-symbols
             :when   (.startsWith (name ns-symb) "tservice.events.")]
       (classloader/require ns-symb)
@@ -40,8 +40,8 @@
 (defn- load-plugin-handlers!
   "Search plugin directory and call their `events-init` function if it exists"
   []
-  (log/info "is-test?: %s" config/is-test?)
-  (when-not config/is-test?
+  (log/info "is-test?: %s" (config/is-test?))
+  (when-not (config/is-test?)
     (doseq [plugin (plugin/get-plugins)]
       (when-let [init-fn (plugin/load-init-fn plugin)]
         (log/info "Starting events listener:" (u/format-color 'blue plugin) "👂")

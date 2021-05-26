@@ -26,6 +26,22 @@ To start a web server for the application, run:
 lein run 
 ```
 
+## Plugin Manifest
+
+```yaml
+info:
+  name: Quartet DNA-Seq Report
+  version: v1.0.1
+  description: Parse the results of the quartet-dna-qc app and generate the report.
+init:
+  - step: load-namespace
+    namespace: tservice.plugins.quartet-dnaseq-report
+  - step: register-plugin
+    entrypoint: tservice.plugins.quartet-dnaseq-report/metadata
+  - step: init-event
+    entrypoint: tservice.plugins.quartet-dnaseq-report/events-init
+```
+
 ## How to reload application without the need to restart the REPL itself
 
 ```

@@ -16,6 +16,7 @@
             [tservice.util :as u]
             [tservice.db.handler :as db-handler]
             [tservice.plugin :as plugin]
+            [tservice.plugin-jars :as plugin-jars]
             [tservice.routes.specs :as specs]
             [tservice.routes.report :as report-route]))
 
@@ -103,7 +104,7 @@
            :parameters {}
            :responses {200 {:body any?}}
            :handler (fn [_]
-                      (let [manifest (plugin/get-manifest)]
+                      (let [manifest (concat (plugin/get-manifest) (plugin-jars/get-manifest))]
                         (if manifest
                           {:body manifest
                            :status 200}

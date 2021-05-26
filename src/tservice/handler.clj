@@ -13,7 +13,8 @@
    [tservice.config :refer [get-workdir]]
    [reitit.spec :as rs]
    [reitit.dev.pretty :as pretty]
-   [tservice.plugin :as plugin]))
+   [tservice.plugin :as plugin]
+   [tservice.plugin-jars :as plugin-jars]))
 
 (mount/defstate init-app
   :start ((or (:init defaults) (fn [])))
@@ -48,7 +49,7 @@
      ["/download/*" (-> (ring/create-resource-handler {:path "/"})
                         (wrap-file (get-workdir)))]
      ; TODO: Duplicated routes?
-     (concat (service-routes) (plugin/get-routes))]
+     (concat (service-routes) (plugin/get-routes) (plugin-jars/get-routes))]
 
     {:validate  rs/validate
      :exception pretty/exception})
