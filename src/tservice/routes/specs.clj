@@ -122,7 +122,7 @@
 
 (s/def ::report_type
   (st/spec
-   {:spec                #(#{"multiqc"} %)
+   {:spec                string?
     :type                :string
     :description         "Filter results by report-type field."
     :swagger/default     "multiqc"

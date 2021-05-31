@@ -56,7 +56,7 @@ RUN echo "**** install dev packages ****" && \
   \
   echo "**** get Miniconda ****" && \
   mkdir -p "$CONDA_DIR" && \
-  wget "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh" -O miniconda.sh && \
+  wget "https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh" -O miniconda.sh && \
   echo "$CONDA_MD5  miniconda.sh" | md5sum -c && \
   \
   echo "**** install Miniconda ****" && \
@@ -91,7 +91,7 @@ ENV LC_CTYPE en_US.UTF-8
 # Dependencies
 ## zip for zipping dependencies of workflow
 # gcc, libc-dev, libxml2 and libxml2-dev for r packages
-RUN yum install -y bash ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev automake git
+RUN yum install -y bash ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev automake git unzip xorg epel-release
 
 # Install R-base for tservice plugins
 RUN conda install r-base=3.6.3
@@ -99,13 +99,29 @@ RUN conda install r-base=3.6.3
 # Install Python Environment
 RUN pip3 install poetry
 
+# Add Matlab Runtime
+RUN mkdir /mcr-install && \
+    mkdir /opt/mcr && \
+    cd /mcr-install && \
+    wget --no-check-certificate -q https://ssd.mathworks.com/supportfiles/downloads/R2020a/Release/6/deployment_files/installer/complete/glnxa64/MATLAB_Runtime_R2020a_Update_6_glnxa64.zip && \
+    unzip -q MATLAB_Runtime_R2020a_Update_6_glnxa64.zip && \
+    rm -f MATLAB_Runtime_R2020a_Update_6_glnxa64.zip && \
+    ./install -destinationFolder /opt/mcr -agreeToLicense yes -mode silent && \
+    cd / && \
+    rm -rf mcr-install    
+
+# Configure environment variables for MCR
+ENV LD_LIBRARY_PATH /usr/local/lib:/usr/local/lib64:/usr/lib64:/lib64:/opt/mcr/v98/runtime/glnxa64:/opt/mcr/v98/bin/glnxa64:/opt/mcr/v98/sys/os/glnxa64:/opt/mcr/v98/extern/bin/glnxa64
+
+ENV XAPPLRESDIR /etc/X11/app-defaults
+
+# Add Openslide
+RUN yum install openslide -y
+
 # Add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
 COPY --from=builder /app/source/target/uberjar/tservice.jar /app/target/uberjar/
 COPY --from=builder /app/source/bin /app/bin
-
-# For Pathology Image
-RUN conda install libvips
 
 # Expose our default runtime port
 EXPOSE 3000
