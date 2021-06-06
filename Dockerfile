@@ -56,7 +56,7 @@ WORKDIR /app
 # Install conda
 COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
-    yum install -y bash ca-certificates wget ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev automake git && \
+    yum install -y which bash ca-certificates wget ttf-dejavu fontconfig libgxps gcc libc-dev libxml2 libxml2-dev automake git && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
