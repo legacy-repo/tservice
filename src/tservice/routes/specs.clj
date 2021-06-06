@@ -125,8 +125,8 @@
    {:spec                string?
     :type                :string
     :description         "Filter results by report-type field."
-    :swagger/default     "multiqc"
-    :reason              "Not valid report-type, only support multiqc."}))
+    :swagger/default     "multireport"
+    :reason              "Not valid report-type, only support multireport"}))
 
 (s/def ::status
   (st/spec

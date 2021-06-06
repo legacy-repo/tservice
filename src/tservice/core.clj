@@ -1,4 +1,5 @@
 (ns tservice.core
+  (:gen-class)
   (:require
    [tservice.setup :as setup]  ; setup must be loaded before handler
    [tservice.handler :as handler]
