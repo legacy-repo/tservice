@@ -52,3 +52,7 @@ deploy:
 	@tar -czvf target/tservice.tar.gz dist/ 2> /dev/null
 	@printf "Your package is prepared into target directory..."
 	@rm -rf dist
+
+build-docker:
+	@echo "Building docker image"
+	@bash build-docker.sh
