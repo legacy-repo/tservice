@@ -7,7 +7,9 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [tservice.util :as u])
+            [tservice.util :as u]
+            [tservice.lib.fs :as fs-lib]
+            [clj-compress.core :as c])
   (:import java.io.FileNotFoundException
            java.net.URL
            [java.nio.file CopyOption Files FileSystem FileSystems LinkOption OpenOption Path Paths StandardCopyOption]
@@ -145,3 +147,23 @@
       (when (exists? file-path)
         (with-open [is (Files/newInputStream file-path (u/varargs OpenOption))]
           (slurp is))))))
+
+(defn long-str [& strings] (clojure.string/join " " strings))
+
+(defn extract-env-from-archive
+  "Extract the entire contents of a file from a archive (such as a JAR)."
+  [^Path archive-path ^String path-component ^String dest-dir]
+  (with-open [fs (FileSystems/newFileSystem archive-path (ClassLoader/getSystemClassLoader))]
+    (let [file-path (get-path-in-filesystem fs path-component)
+          dest-path (fs-lib/join-paths dest-dir path-component)
+          env-name (first (str/split path-component #"\."))
+          env-path (fs-lib/join-paths dest-dir env-name)]
+      (log/info (format "Extract env archive %s to %s" file-path env-path))
+      (when (exists? file-path)
+        (if (fs-lib/exists? env-path)
+          (log/info (u/format-color 'yellow
+                                    (format (long-str "If it have any problems when the plugin %s is loading"
+                                                      "you can remove the directory `%s` and retry.") env-name env-path)))
+          (with-open [is (Files/newInputStream file-path (u/varargs OpenOption))]
+            (io/copy is (io/file dest-path))
+            (c/decompress-archive dest-path dest-dir "gz")))))))

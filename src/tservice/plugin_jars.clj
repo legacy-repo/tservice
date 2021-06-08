@@ -82,7 +82,7 @@
   [^Path jar-path]
   (if-let [info (plugin-info jar-path)]
     ;; for plugins that include a tservice-plugin.yaml manifest run the normal init steps, don't add to classpath yet
-    (init-plugin-with-info! (assoc info :add-to-classpath! #(add-to-classpath! jar-path)))
+    (init-plugin-with-info! (assoc info :add-to-classpath! #(add-to-classpath! jar-path) :jar-path jar-path))
     ;; for all other JARs just add to classpath and call it a day
     (add-to-classpath! jar-path)))
 
@@ -127,15 +127,12 @@
     (try
       (init-plugin! path)
       (catch Throwable e
-        (log/error e "Failied to initialize plugin " (.getFileName path))))))
+        (log/error e "Failed to initialize plugin " (.getFileName path))))))
 
 (defn- load! []
   (log/info (format "Loading plugins in %s..." (str (plugins-dir))))
-  (extract-system-modules!)
   (let [paths (plugins-paths)]
-    (init-plugins! paths))
-  (when (or (config/is-dev?) (config/is-test?))
-    (load-local-plugin-manifests!)))
+    (init-plugins! paths)))
 
 (defonce ^:private load!* (delay (load!)))
 

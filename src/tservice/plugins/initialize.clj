@@ -8,21 +8,26 @@
             [tservice.plugins.dependencies :as deps]
             [tservice.plugins.init-steps :as init-steps]
             [tservice.util :as u]
+            [tservice.lib.fs :as fs]
             [schema.core :as s]))
 
 (defonce ^:private initialized-plugin-names (atom #{}))
 
 (defn- init!
-  [{:keys [add-to-classpath!], init-steps :init, {plugin-name :name} :info, plugin-or-plugins :plugin, :as info}]
+  [{:keys [add-to-classpath! jar-path], init-steps :init, {plugin-name :name} :info, plugin-or-plugins :plugin, :as info}]
   {:pre [(string? plugin-name)]}
 
   (when (deps/all-dependencies-satisfied? @initialized-plugin-names info)
-    (let [plugins (u/one-or-many plugin-or-plugins)]
+    (let [plugins (u/one-or-many plugin-or-plugins)
+          env-dest-dir (fs/join-paths (fs/parent-path jar-path) "envs")]
       ;; if *any* of the plugins is not lazy-load, initialize it now
       (when (some false? (map :lazy-load plugins))
         (when add-to-classpath!
           (add-to-classpath!))
-        (init-steps/do-init-steps! init-steps)))
+        (when (not (fs/exists? env-dest-dir))
+          (fs/create-directories! env-dest-dir))
+        (init-steps/do-init-steps! init-steps {:jar-path jar-path 
+                                               :dest-dir env-dest-dir})))
     ;; record this plugin as initialized and find any plugins ready to be initialized because depended on this one !
     ;;
     ;; Fun fact: we already have the `plugin-initialization-lock` if we're here so we don't need to worry about

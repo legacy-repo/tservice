@@ -56,7 +56,7 @@ WORKDIR /app
 # Install conda
 COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
-    yum install -y which bash ca-certificates wget ttf-dejavu fontconfig libgxps libgxps-tools gcc libc-dev libxml2 libxml2-dev automake git && \
+    yum install -y which bash wget git libgxps && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
@@ -68,14 +68,13 @@ RUN echo "**** Install dev packages ****" && \
     echo "export PATH=$PATH:$CONDA_DIR/bin" > /etc/profile.d/conda.sh && \
     \
     echo "**** Setup Miniconda ****" && \
-    conda update --all --yes && \
     conda config --set auto_update_conda False && \
     \
     echo "**** Initialize conda ****" && \
     conda init bash && \
     \
     echo "**** Install dev dependencies ****" && \
-    conda install r-base=3.6.3 libvips && \
+    conda install conda-pack && \
     \
     echo "**** Add Nvidia Runtime ****" && \
     distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && \

@@ -34,6 +34,9 @@ info:
   version: v1.0.1
   description: Parse the results of the quartet-dna-qc app and generate the report.
 init:
+  # Unpack environment file to the directory, repository/envs/quartet-dnaseq-report
+  - step: unpack-env
+    envname: quartet-dnaseq-report
   - step: load-namespace
     namespace: tservice.plugins.quartet-dnaseq-report
   - step: register-plugin

@@ -6,7 +6,8 @@
   (:require [clojure.tools.logging :as log]
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.plugin-proxy :as plugin-proxy]
-            [tservice.util :as u]))
+            [tservice.util :as u]
+            [tservice.util.files :as files]))
 
 (defmulti ^:private do-init-step!
   "Perform a plugin init step. Steps are listed in `init:` in the plugin manifest; impls for each step are found below
@@ -14,8 +15,14 @@
   {:arglists '([m])}
   (comp keyword :step))
 
+(defmethod do-init-step! :unpack-env [{envname :envname context :context}]
+  (let [{:keys [jar-path dest-dir]} context]
+    (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
+    (when jar-path
+      (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir))))
+
 (defmethod do-init-step! :load-namespace [{nmspace :namespace}]
-  (log/debug (u/format-color 'blue (format "Loading plugin namespace %s..." nmspace)))
+  (log/info (u/format-color 'blue (format "Loading plugin namespace %s..." nmspace)))
   (classloader/require (symbol nmspace)))
 
 (defmethod do-init-step! :register-plugin [{entrypoint :entrypoint}]
@@ -27,6 +34,6 @@
 (defn do-init-steps!
   "Perform the initialization steps for a TService plugin as specified under `init:` in its plugin
   manifest (`tservice-plugin.yaml`) by calling `do-init-step!` for each step."
-  [init-steps]
+  [init-steps context]
   (doseq [step init-steps]
-    (do-init-step! step)))
+    (do-init-step! (assoc step :context context))))
