@@ -60,7 +60,7 @@ RUN echo "**** Install dev packages ****" && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
-    wget "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh" -O miniconda.sh && \
+    wget "https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh" -O miniconda.sh && \
     echo "$CONDA_MD5  miniconda.sh" | md5sum -c && \
     \
     echo "**** Install Miniconda ****" && \
