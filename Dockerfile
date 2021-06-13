@@ -73,8 +73,11 @@ RUN echo "**** Install dev packages ****" && \
     echo "**** Initialize conda ****" && \
     conda init bash && \
     \
-    echo "**** Install dev dependencies ****" && \
+    echo "**** Install dev dependencies by conda ****" && \
     conda install conda-pack && \
+    \
+    echo "**** Install dev dependencies by pip ****" && \
+    pip install --no-cache-dir virtualenv clone-env==0.5.4 && \
     \
     echo "**** Add Nvidia Runtime ****" && \
     distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && \

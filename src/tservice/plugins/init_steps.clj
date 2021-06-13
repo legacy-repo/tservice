@@ -7,7 +7,8 @@
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.plugin-proxy :as plugin-proxy]
             [tservice.util :as u]
-            [tservice.util.files :as files]))
+            [tservice.util.files :as files]
+            [tservice.lib.commons :as commons]))
 
 (defmulti ^:private do-init-step!
   "Perform a plugin init step. Steps are listed in `init:` in the plugin manifest; impls for each step are found below
@@ -15,11 +16,15 @@
   {:arglists '([m])}
   (comp keyword :step))
 
-(defmethod do-init-step! :unpack-env [{envname :envname context :context}]
-  (let [{:keys [jar-path dest-dir]} context]
+(defmethod do-init-step! :unpack-env [{envname :envname postunpack :postunpack context :context}]
+  (let [{:keys [jar-path dest-dir]} context
+        post-unpack-cmd (when postunpack (commons/render-template postunpack {:ENV_DEST_DIR dest-dir}))]
     (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
     (when jar-path
-      (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir))))
+      (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir)
+      (when post-unpack-cmd
+        (log/info (u/format-color 'blue (format "Run post-unpack-cmd: %s" post-unpack-cmd)))
+        (log/debug (commons/call-command! post-unpack-cmd))))))
 
 (defmethod do-init-step! :load-namespace [{nmspace :namespace}]
   (log/info (u/format-color 'blue (format "Loading plugin namespace %s..." nmspace)))
