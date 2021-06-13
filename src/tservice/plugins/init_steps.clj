@@ -18,7 +18,10 @@
 
 (defmethod do-init-step! :unpack-env [{envname :envname postunpack :postunpack context :context}]
   (let [{:keys [jar-path dest-dir]} context
-        post-unpack-cmd (when postunpack (commons/render-template postunpack {:ENV_DEST_DIR dest-dir}))]
+        post-unpack-cmd (when postunpack
+                          (commons/render-template postunpack
+                                                   {:ENV_DEST_DIR dest-dir
+                                                    :ENV_NAME envname}))]
     (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
     (when jar-path
       (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir)

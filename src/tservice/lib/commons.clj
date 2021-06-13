@@ -5,6 +5,7 @@
             [tservice.lib.fs :as fs-lib]
             [clojure.java.io :as io]
             [selmer.parser :as parser]
+            [clojure.tools.logging :as log]
             [clojure.java.shell :as shell :refer [sh]])
   (:import [org.apache.commons.io.input BOMInputStream]))
 
@@ -125,7 +126,19 @@
        (.getAbsolutePath exe-file)))))
 
 (defn render-template
-  "TODO: Schema for rendering environment."
-  [template & {:keys [ENV_DEST_DIR]}]
-  (parser/render template {:ENV_DEST_DIR ENV_DEST_DIR
-                           :CLONE_ENV_BIN (which "clone-env")}))
+  "TODO: Schema for rendering environment.
+   
+   Arguments:
+     env-context: {:ENV_DEST_DIR \" \"
+                   :ENV_NAME \"pgi\"
+                   :CLONE_ENV_BIN \"\"}
+   "
+  [template env-context]
+  (log/debug (format "Render Template with Environment Context: %s" env-context))
+  (let [{:keys [ENV_DEST_DIR ENV_NAME]} env-context
+        env-dest-dir (fs-lib/join-paths ENV_DEST_DIR ENV_NAME)
+        env-name ENV_NAME
+        clone-env-bin (which "clone-env")]
+    (parser/render template {:ENV_DEST_DIR env-dest-dir
+                             :ENV_NAME env-name
+                             :CLONE_ENV_BIN clone-env-bin})))
