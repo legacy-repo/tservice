@@ -63,8 +63,7 @@
                   :exclusions [org.clojure/clojure
                                org.flatland/ordered
                                org.yaml/snakeyaml]]
-                 [org.yaml/snakeyaml "1.23"]                                        ; YAML parser (required by liquibase)
-                 [middlesphere/clj-compress "0.1.0"]]
+                 [org.yaml/snakeyaml "1.23"]]                                        ; YAML parser (required by liquibase)
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]

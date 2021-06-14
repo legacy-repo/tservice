@@ -9,7 +9,7 @@
             [clojure.tools.logging :as log]
             [tservice.util :as u]
             [tservice.lib.fs :as fs-lib]
-            [clj-compress.core :as c])
+            [tservice.lib.commons :as commons])
   (:import java.io.FileNotFoundException
            java.net.URL
            [java.nio.file CopyOption Files FileSystem FileSystems LinkOption OpenOption Path Paths StandardCopyOption]
@@ -150,6 +150,19 @@
 
 (defn long-str [& strings] (clojure.string/join " " strings))
 
+(defn decompress-archive
+  "decompress data from archive to `out-folder` directory.
+   Warning! In `out-folder` files will be overwritten by decompressed data from `arch-name`.
+  "
+  [^String arch-name ^String out-folder]
+  (let [suffix (fs-lib/extension arch-name)
+        cmd-fn (fn [arg] (commons/call-command! (format "tar %s -xf %s -C %s" arg arch-name out-folder)))]
+   (cond (= suffix "gz") (cmd-fn "-z")
+         (= suffix "bz2") (cmd-fn "-j")
+         (= suffix "xz") (cmd-fn "-J")
+         (= suffix "lzma") (cmd-fn "--lzma")
+         (= suffix "zip") (commons/call-command! (format "unzip -d %s %s" out-folder arch-name)))))
+
 (defn extract-env-from-archive
   "Extract the entire contents of a file from a archive (such as a JAR)."
   [^Path archive-path ^String path-component ^String dest-dir]
@@ -166,4 +179,4 @@
                                                       "you can remove the directory `%s` and retry.") env-name env-path)))
           (with-open [is (Files/newInputStream file-path (u/varargs OpenOption))]
             (io/copy is (io/file dest-path))
-            (c/decompress-archive dest-path dest-dir "gz")))))))
+            (decompress-archive dest-path dest-dir)))))))
