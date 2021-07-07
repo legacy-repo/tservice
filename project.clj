@@ -1,4 +1,4 @@
-(defproject tservice "0.3.1"
+(defproject tservice "lein-git-inject/version"
 
   :description "Make tool as a service."
   :url "https://github.com/clinico-omics/tservice"
@@ -82,7 +82,8 @@
   :target-path "target/%s/"
   :main ^:skip-aot tservice.core
 
-  :plugins [[lein-uberwar "0.2.0"]]
+  :plugins [[lein-uberwar "0.2.0"]
+            [day8/lein-git-inject "0.0.13"]]
 
   :uberwar
   {:handler tservice.handler/app
@@ -90,6 +91,7 @@
    :destroy tservice.handler/destroy
    :name "tservice.war"}
 
+  :middleware [leiningen.git-inject/middleware]
 
   :profiles
   {:uberjar {:omit-source false
@@ -109,7 +111,8 @@
                                  [ring/ring-devel "1.8.1"]
                                  [ring/ring-mock "0.4.0"]]
                   :plugins      [[com.jakemccrary/lein-test-refresh "0.24.1"]
-                                 [jonase/eastwood "0.3.5"]]
+                                 [jonase/eastwood "0.3.5"]
+                                 [lein-pprint "1.3.2"]]
 
                   :source-paths ["env/dev"]
                   :resource-paths ["env/dev/resources"]
