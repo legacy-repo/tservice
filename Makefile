@@ -1,7 +1,4 @@
-.PHONY: test dev-db test-db clean-test-db clean-dev-db deploy
-# WARNING
-# The Makefile file is used for local postgres database.
-# This file is listed in .gitignore and will be excluded from version control by Git.
+.PHONY: test dev-db test-db clean-test-db clean-dev-db build-jar build-docker
 
 test: clean-test-db test-db
 	@printf "\nRunning unittest...\n"
@@ -35,20 +32,10 @@ clean-dev-db:
 	@printf "Clean "
 	@-docker rm tservice
 
-deploy:
-	@printf "Clean old files...\n"
-	@rm -rf dist
-	@mkdir -p dist/bin dist/lib
+build-jar:
 	@printf "Make tservice.jar package...\n"
 	@lein uberjar
-	@printf "Copy Makefile, requirements.txt to dist...\n"
-	@cp external/app-utility dist/bin/app-utility
-	@cp external/Makefile dist/Makefile
-	@cp external/requirements.txt dist/requirements.txt
-	@cp target/uberjar/tservice.jar dist/lib/
-	@tar -czvf target/tservice.tar.gz dist/ 2> /dev/null
 	@printf "Your package is prepared into target directory..."
-	@rm -rf dist
 
 build-docker:
 	@echo "Building docker image"
