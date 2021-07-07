@@ -2,24 +2,17 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [tservice.lib.fs :as fs]
-            [tservice.config :as config]
+            [tservice.lib.files :as files :refer [get-plugin-jar-dir]]
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.initialize :as initialize]
-            [tservice.util.files :as files]
             [tservice.plugins.plugin-proxy :refer [get-plugins-metadata]]
             [yaml.core :as yaml])
   (:import [java.nio.file Files Path]))
 
-(defn- get-default-dir
-  "Get the location of the local jar repository used by `load-plugins` or `load-plugin`"
-  []
-  (fs/expand-home (fs/join-paths (:tservice-plugin-path config/env) "repository")))
-
 ;; logic for determining plugins dir -- see below
 (defonce ^:private plugins-dir*
   (delay
-   (let [filename (get-default-dir)]
+   (let [filename (get-plugin-jar-dir)]
      (try
         ;; attempt to create <current-dir>/plugins if it doesn't already exist. Check that the directory is readable.
        (let [path (files/get-path filename)]
@@ -155,7 +148,7 @@
 
 (defn start-plugin-jars!
   []
-  (when (some? (:tservice-plugin-path config/env))
+  (when (some? (get-plugin-jar-dir))
     (load-plugins!)))
 
 (defn stop-plugin-jars!

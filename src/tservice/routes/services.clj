@@ -9,7 +9,7 @@
             [reitit.swagger-ui :as swagger-ui]
             [reitit.swagger :as swagger]
             [ring.util.http-response :refer [ok not-found]]
-            [tservice.config :refer [get-workdir]]
+            [tservice.lib.files :refer [get-workdir]]
             [tservice.lib.fs :as fs-lib]
             [tservice.middleware.exception :as exception]
             [tservice.middleware.formats :as formats]

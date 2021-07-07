@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [tservice.lib.fs :as fs]
             [clojure.java.io :as io]
-            [tservice.config :refer [env]]))
+            [tservice.lib.files :refer [get-plugin-dir]]))
 
 (defn- clj-file?
   [file-path]
@@ -90,7 +90,7 @@
   "Sets the location of the local clojure repository used
    by `load-plugins` or `load-plugin`"
   ([path] (reset! repo (fs/expand-home path)))
-  ([] (setup-repo (fs/join-paths (:tservice-plugin-path env) "plugins"))))
+  ([] (setup-repo (get-plugin-dir))))
 
 (defn- setup-plugins
   []

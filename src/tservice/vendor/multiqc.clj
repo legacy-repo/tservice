@@ -2,32 +2,7 @@
   "A wrapper for multiqc instance."
   (:require [clojure.tools.logging :as log]
             [clojure.string :as clj-str]
-            [tservice.config :refer [env]]
-            [clojure.java.shell :as shell :refer [sh]]))
-
-(defn exist-bin?
-  "True if multiqc is installed, otherwise return false."
-  []
-  (= 0 (:exit (sh "which" "multiqc"))))
-
-(defn get-path-variable
-  []
-  (let [external-bin (get-in env [:external-bin])
-        sys-path (System/getenv "PATH")]
-    (if external-bin
-      (str external-bin ":" sys-path)
-      sys-path)))
-
-(defn run-command
-  [command-lst]
-  (shell/with-sh-env {:PATH   (get-path-variable)
-                      :LC_ALL "en_US.utf-8"
-                      :LANG   "en_US.utf-8"}
-    (let [result (apply sh command-lst)
-          status (if (= (:exit result) 0) "Success" "Error")
-          msg (str (:out result) "\n" (:err result))]
-      {:status status
-       :msg msg})))
+            [tservice.lib.files :refer [call-command!]]))
 
 (defn multiqc
   "A multiqc wrapper for generating multiqc report:
@@ -72,7 +47,7 @@
                                                   "--outdir" outdir
                                                   "-t" template
                                                   analysis-dir])
-        command-lst ["bash" "-c" (clj-str/join " " multiqc-command)]]
+        command (clj-str/join " " multiqc-command)]
     (if dry-run?
-      (log/debug (clj-str/join " " command-lst))
-      (run-command command-lst))))
+      (log/debug command)
+      (call-command! command))))

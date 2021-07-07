@@ -83,7 +83,8 @@
   :main ^:skip-aot tservice.core
 
   :plugins [[lein-uberwar "0.2.0"]
-            [day8/lein-git-inject "0.0.13"]]
+            [day8/lein-git-inject "0.0.13"]
+            [lein-codox "0.10.7"]]
 
   :uberwar
   {:handler tservice.handler/app
@@ -92,6 +93,8 @@
    :name "tservice.war"}
 
   :middleware [leiningen.git-inject/middleware]
+
+  :codox {:output-path "docs"}
 
   :profiles
   {:uberjar {:omit-source false

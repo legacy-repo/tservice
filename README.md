@@ -6,19 +6,29 @@ Many tools are used in the research, but located in each computer. e.g. xps to p
 
 Why can't we do all these things in one place？Tservice is the answer.
 
-## Prerequisites
+## For user
+### Using docker
+
+### Download jar package
+
+```
+wget https://github.com/clinico-omics/tservice/
+```
+
+## For Developer
+### Prerequisites
 
 You will need [Leiningen][1] 2.0 or above installed.
 
 [1]: https://github.com/technomancy/leiningen
 
-## Install Dependencies
+### Install Dependencies
 
 ```bash
 lein deps
 ```
 
-## Running
+### Running
 
 To start a web server for the application, run:
 
@@ -26,8 +36,16 @@ To start a web server for the application, run:
 lein run 
 ```
 
-## Plugin Manifest
+## How to reload application without the need to restart the REPL itself
 
+```
+(require '[user :as u])
+(u/restart)
+```
+
+### How to develop tservice plugin?
+
+#### Tservice Plugin Manifest
 ```yaml
 info:
   name: Quartet DNA-Seq Report
@@ -45,13 +63,6 @@ init:
     entrypoint: tservice.plugins.quartet-dnaseq-report/events-init
 ```
 
-## How to reload application without the need to restart the REPL itself
-
-```
-(require '[user :as u])
-(u/restart)
-```
-
 ## License
 
-Copyright © 2019 FIXME
+Copyright © 2015-2021 Eclipse Public License 2.0

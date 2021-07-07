@@ -10,7 +10,7 @@
    [ring.middleware.file :refer [wrap-file]]
    [mount.core :as mount]
    [clojure.tools.logging :as log]
-   [tservice.config :refer [get-workdir]]
+   [tservice.lib.files :refer [get-workdir]]
    [reitit.spec :as rs]
    [reitit.dev.pretty :as pretty]
    [tservice.plugin :as plugin]

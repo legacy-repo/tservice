@@ -2,7 +2,6 @@
   (:require
    [cprop.core :refer [load-config]]
    [cprop.source :as source]
-   [tservice.lib.fs :as fs]
    [mount.core :refer [args defstate]]))
 
 (defonce ^:private run-mode*
@@ -34,21 +33,3 @@
    [(args)
     (source/from-system-props)
     (source/from-env)]))
-
-(defn get-workdir
-  ([]
-   (fs/expand-home (get-in env [:tservice-workdir])))
-  ([type]
-   (cond
-     (= type "Chart") (fs/expand-home (get-in env [:proxy-server-dir]))
-     (= type "Tool") (get-workdir)
-     (= type "Report") (get-workdir)
-     :else (get-workdir))))
-
-(defn get-proxy-server
-  []
-  (get-in env [:proxy-server]))
-
-(defn get-plugin-dir
-  []
-  (get-in env [:tservice-plugin-path]))

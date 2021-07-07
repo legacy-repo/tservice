@@ -16,7 +16,6 @@ dev-db: clean-dev-db
 	@echo "Migrate database..."
 	@bash lein run migrate
 
-
 test-db:
 	@printf "\nLaunch postgres database...(default password: password)\n"
 	@docker run --name tservice-test -e POSTGRES_PASSWORD=password -e POSTGRES_USER=postgres -p 54320:5432 -d postgres:10.0
@@ -24,13 +23,11 @@ test-db:
 	@echo "Create database: datains_test"
 	@bash create-db.sh datains_test 54320
 
-
 clean-test-db:
 	@printf "Stop "
 	@-docker stop tservice-test
 	@printf "Clean "
 	@-docker rm tservice-test
-
 
 clean-dev-db:
 	@printf "Stop "

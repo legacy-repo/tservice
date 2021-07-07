@@ -5,7 +5,7 @@
    [clojure.tools.logging :as log]
    [tservice.util :as util]
    [clojure.data.json :as json]
-   [tservice.config :refer [get-workdir]]
+   [tservice.lib.files :refer [get-workdir]]
    [tservice.lib.fs :as fs-lib]))
 
 (defn- filter-query-map
