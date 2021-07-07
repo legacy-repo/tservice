@@ -94,7 +94,8 @@
 
   :middleware [leiningen.git-inject/middleware]
 
-  :codox {:output-path "docs"}
+  :codox {:output-path "docs"
+          :source-uri "https://github.com/clinico-omics/tservice/blob/v{version}/{filepath}#L{line}"}
 
   :profiles
   {:uberjar {:omit-source false
