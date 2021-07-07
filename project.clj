@@ -1,4 +1,4 @@
-(defproject tservice "0.2.0"
+(defproject tservice "0.3.1"
 
   :description "Make tool as a service."
   :url "https://github.com/clinico-omics/tservice"
