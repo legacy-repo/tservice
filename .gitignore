@@ -18,3 +18,4 @@ profiles.clj
 .clj-kondo
 .lsp
 .calva/
+dev-resources

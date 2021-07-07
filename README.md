@@ -12,7 +12,7 @@ Why can't we do all these things in one place？Tservice is the answer.
 ### Download jar package
 
 ```
-wget https://github.com/clinico-omics/tservice/
+# TODO
 ```
 
 ## For Developer
