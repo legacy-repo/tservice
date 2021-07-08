@@ -61,7 +61,7 @@
   "Self-explanatory. Create a directory with `path` if it does not already exist."
   [^Path path]
   (when-not (exists? path)
-    (Files/createDirectory path (u/varargs FileAttribute))))
+    (Files/createDirectories path (u/varargs FileAttribute))))
 
 (defn files-seq
   "Get a sequence of all files in `path`, presumably a directory or an archive of some sort (like a JAR)."
@@ -150,13 +150,13 @@
 (defn get-plugin-dir
   []
   (let [path (fs/join-paths (get-plugin-basedir) "plugins")]
-    (create-dir-if-not-exists! path)
+    (create-dir-if-not-exists! (get-path path))
     path))
 
 (defn get-plugin-jar-dir
   []
   (let [path (fs/join-paths (get-plugin-basedir) "plugin-jars")]
-    (create-dir-if-not-exists! path)
+    (create-dir-if-not-exists! (get-path path))
     path))
 
 (defn get-path-variable
