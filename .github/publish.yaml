@@ -1,0 +1,43 @@
+name: Publish Docker image
+on:
+  push:
+    branches: [ dev ]
+    tags:
+      - v*
+jobs:
+  push_to_registry:
+    name: Push Docker image to GitHub Packages
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v1
+        with:
+          registry: docker.pkg.github.com
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push docker image
+        run: ./build-docker.sh
+        shell: bash
+  build_doc:
+    name: Build docs & push to gh-pages branch
+    runs-on: ubuntu-latest
+    container:
+      # Ref: https://github.community/t5/GitHub-Actions/docker-pull-from-public-GitHub-Package-Registry-fail-with-quot/m-p/32782
+      image: superstructor/clojure:openjdk-11-lein-2.9.1-node-browsers
+    steps:
+      - name: Checkout Current Branch
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build Codox Documentation
+        run: lein codox
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
