@@ -55,7 +55,7 @@ Why can't we do all these things in one place？Tservice is the answer.
     :tasks {:sync-reports {:cron "0 */1 * * * ?"}}}
    ```
 
-4. Install [PostgreSQL][#How to create a database for development?] and create the `tservice_dev` database for development
+4. Install [PostgreSQL](#How to create a database for development?) and create the `tservice_dev` database for development
 
 ### Install Dependencies
 
@@ -78,7 +78,13 @@ lein run
 (u/restart)
 ```
 
-### How to develop tservice plugin?
+### How to get a tservice plugin?
+
+```
+# TODO
+```
+
+### How to develop a tservice plugin?
 
 #### Tservice Plugin Manifest
 ```yaml
