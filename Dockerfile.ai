@@ -72,6 +72,7 @@ RUN echo "**** Install dev packages ****" && \
     \
     echo "**** Setup Miniconda ****" && \
     conda config --set auto_update_conda False && \
+    conda config --add channels conda-forge bioconda && \
     \
     echo "**** Initialize conda ****" && \
     conda init bash && \
