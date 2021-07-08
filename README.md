@@ -55,7 +55,7 @@ Why can't we do all these things in one place？Tservice is the answer.
     :tasks {:sync-reports {:cron "0 */1 * * * ?"}}}
    ```
 
-4. Install [PostgreSQL](#How to create a database for development?) and create the `tservice_dev` database for development
+4. [Install PostgreSQL and create the `tservice_dev` database for development](#build-dev-db)
 
 ### Install Dependencies
 
@@ -119,7 +119,7 @@ init:
 make build-docker
 ```
 
-### How to create a database for development?
+### <span id="build-dev-db">How to create a database for development?</span>
 
 ```
 make dev-db
