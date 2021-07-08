@@ -72,7 +72,8 @@
 
   :plugin-repositories [["central" "https://maven.aliyun.com/repository/central"]
                         ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
-                        ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]]
+                        ["clojars" "https://mirrors.tuna.tsinghua.edu.cn/clojars/"]
+                        ["clojars-official" "https://clojars.org/repo/"]]
 
   :min-lein-version "2.0.0"
 

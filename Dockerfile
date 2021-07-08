@@ -56,7 +56,8 @@ ENV LC_CTYPE en_US.UTF-8
 WORKDIR /app
 
 # Install conda
-COPY condarc /root/.condarc
+# You can uncomment the following line when you are in Chinese Mainland
+# COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
     yum install -y which bash wget git libgxps && \
     \

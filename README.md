@@ -1,10 +1,14 @@
-# Tservice
+# TService
 
-Make tool as a service.
+Make research tool as a service.
 
 Many tools are used in the research, but located in each computer. e.g. xps to pdf, convert rnaseq results to a report etc. 
 
-Why can't we do all these things in one place？Tservice is the answer.
+Why can't we do all these things in one place? TService is the answer.
+
+[![Latest Release](https://img.shields.io/github/v/release/clinico-omics/tservice?sort=semver)](https://github.com/clinico-omics/tservice/releases)
+[![Docker Image](https://github.com/clinico-omics/tservice/actions/workflows/publish.yaml/badge.svg)](https://github.com/clinico-omics/tservice/actions/workflows/publish.yaml)
+[![License](https://img.shields.io/github/license/clinico-omics/tservice)](https://github.com/clinico-omics/tservice/blob/master/LICENSE.md)
 
 ## For user
 ### Using docker image
@@ -94,7 +98,7 @@ lein run
 
 ### How to develop a tservice plugin?
 
-#### Tservice Plugin Manifest
+#### TService Plugin Manifest
 ```yaml
 info:
   name: Quartet DNA-Seq Report
