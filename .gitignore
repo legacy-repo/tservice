@@ -19,3 +19,4 @@ profiles.clj
 .lsp
 .calva/
 dev-resources
+docs/

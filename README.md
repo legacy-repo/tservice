@@ -112,14 +112,20 @@ init:
     entrypoint: tservice.plugins.quartet-dnaseq-report/events-init
 ```
 
-### How to auto-generate docs?
+### [How to auto-generate docs?](https://github-wiki-see.page/m/weavejester/codox/wiki/Deploying-to-GitHub-Pages)
 
 1. Commit all code modifications
 2. Give a tag for the latest commit
-3. Switch to the gh-pages branch
-4. Merge master into the gh-pages branch
-5. Run the `lein codox` to generate docs
-6. Commit all modifications and push the gh-pages branch to the GitHub
+3. Build your documentation with `lein codox`
+4. To publish your docs to Github Pages, run the following commands
+   
+   ```
+   cd docs
+   git add .
+   git commit -am "Update docs."
+   git push -u origin gh-pages
+   cd ..
+   ```
 
 ### How to build docker image?
 
