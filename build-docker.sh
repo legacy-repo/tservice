@@ -14,5 +14,5 @@ docker push ghcr.io/clinico-omics/tservice:${VERSION}-${HASH}
 
 # Build docker image for AI
 docker build -t tservice-ai:${VERSION}-${HASH} . -f Dockerfile.ai && \
-docker tag tservice-ai:${VERSION}-${HASH} ghcr.io/clinico-omics/tservice-ai:${VERSION}-${HASH} * && \
+docker tag tservice-ai:${VERSION}-${HASH} ghcr.io/clinico-omics/tservice-ai:${VERSION}-${HASH} && \
 docker push ghcr.io/clinico-omics/tservice-ai:${VERSION}-${HASH}
