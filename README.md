@@ -9,6 +9,14 @@ Why can't we do all these things in one place？Tservice is the answer.
 ## For user
 ### Using docker image
 
+1. Go to the Packages page in the `https://github.com/clinico-omics/tservice`
+2. Choose a version
+3. Pull your expected package with the following command
+
+```
+docker pull ghcr.io/clinico-omics/tservice:v0.3.2-9e3daa48
+```
+
 ### Download jar package
 
 ```
