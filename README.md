@@ -11,6 +11,58 @@ Why can't we do all these things in one place? TService is the answer.
 [![License](https://img.shields.io/github/license/clinico-omics/tservice)](https://github.com/clinico-omics/tservice/blob/master/LICENSE.md)
 
 ## For user
+### Configuration
+
+#### Configuration File Mode
+```clojure
+{:port 8089
+ ;; when :nrepl-port is set the application starts the nREPL server on load
+ :nrepl-port 7000
+ ;; :database-url "postgresql://localhost:5432/tservice_dev?user=postgres&password=password"
+ :database-url "jdbc:sqlite:./tservice/tservice_dev.db"
+ :external-bin "/Users/choppy/Documents/Code/ClinicoOmics/ReportEngine/tservice-plugins/external:/Users/choppy/miniconda3/envs/multiqc/bin"
+ :tservice-workdir "./tservice"
+ :tservice-plugin-path "./tservice/"
+ :tservice-run-mode "dev"
+ :fs-services [{:fs-service             "minio"
+                :fs-endpoint            "http://localhost:9000"
+                :fs-access-key          "XXXXXXXXXXXX"
+                :fs-secret-key          "XXXXXXXXXXXX"
+                :fs-rootdir             "/data/minio"}
+               {:fs-service             "oss"
+                :fs-endpoint            "http://oss-cn-shanghai.aliyuncs.com"
+                :fs-access-key          "XXXXXXXXXXXX"
+                :fs-secret-key          "XXXXXXXXXXXX"
+                :fs-rootdir             ""}]
+ :default-fs-service "minio"
+ :tasks {:sync-reports {:cron "0 */1 * * * ?"}}}
+```
+
+#### Environment Mode
+
+```bash
+# Port
+export PORT=3000
+# NREPL Port
+export NREPL_PORT=7000
+
+# Database(Support PostgreSQL, H2, SQLite)
+## PostgreSQL
+export DATABASE_URL="postgresql://localhost:5432/tservice_dev?user=postgres&password=password"
+
+## H2
+export DATABASE_URL="jdbc:h2:./tservice_dev.db"
+
+## SQLite
+export DATABASE_URL="jdbc:sqlite:./tservice_dev.db"
+
+# TService Working Directory
+export TSERVICE_WORKDIR=./
+
+# TService Plugin Path
+export TSERVICE_PLUGIN_PATH=./
+```
+
 ### Using docker image
 
 1. Go to the Packages page in the `https://github.com/clinico-omics/tservice`

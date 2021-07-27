@@ -1,22 +1,14 @@
 (ns tservice.db.core
   (:require
    [cheshire.core :refer [generate-string parse-string]]
-   [clojure.java.jdbc :as jdbc]
+   [next.jdbc.date-time]
+   [next.jdbc.prepare]
+   [next.jdbc.result-set]
    [clojure.tools.logging :as log]
    [conman.core :as conman]
-   [java-time :as jt]
-   [java-time.pre-java8]
    [tservice.config :refer [env]]
-  ;;  [camel-snake-kebab.extras :refer [transform-keys]]
-  ;;  [camel-snake-kebab.core :refer [->kebab-case-keyword ->snake_case]]
    [mount.core :refer [defstate]])
-  (:import org.postgresql.util.PGobject
-           java.sql.Array
-           clojure.lang.IPersistentMap
-           clojure.lang.IPersistentVector
-           [java.sql
-            BatchUpdateException
-            PreparedStatement]))
+  (:import (org.postgresql.util PGobject)))
 
 (defstate ^:dynamic *db*
   :start (if-let [jdbc-url (env :database-url)]
@@ -30,92 +22,57 @@
                         "sql/tag.sql"
                         "sql/report.sql")
 
-(extend-protocol jdbc/IResultSetReadColumn
+(defn pgobj->clj [^org.postgresql.util.PGobject pgobj]
+  (let [type (.getType pgobj)
+        value (.getValue pgobj)]
+    (case type
+      "json" (parse-string value true)
+      "jsonb" (parse-string value true)
+      "citext" (str value)
+      value)))
+
+(extend-protocol next.jdbc.result-set/ReadableColumn
   java.sql.Timestamp
-  (result-set-read-column [v _2 _3]
+  (read-column-by-label [^java.sql.Timestamp v _]
+    (.toLocalDateTime v))
+  (read-column-by-index [^java.sql.Timestamp v _2 _3]
     (.toLocalDateTime v))
   java.sql.Date
-  (result-set-read-column [v _2 _3]
+  (read-column-by-label [^java.sql.Date v _]
+    (.toLocalDate v))
+  (read-column-by-index [^java.sql.Date v _2 _3]
     (.toLocalDate v))
   java.sql.Time
-  (result-set-read-column [v _2 _3]
+  (read-column-by-label [^java.sql.Time v _]
     (.toLocalTime v))
-  Array
-  (result-set-read-column [v _ _] (vec (.getArray v)))
-  PGobject
-  (result-set-read-column [pgobj _metadata _index]
-    (let [type  (.getType pgobj)
-          value (.getValue pgobj)]
-      (case type
-        "json" (parse-string value true)
-        "jsonb" (parse-string value true)
-        "citext" (str value)
-        value))))
+  (read-column-by-index [^java.sql.Time v _2 _3]
+    (.toLocalTime v))
+  java.sql.Array
+  (read-column-by-label [^java.sql.Array v _]
+    (vec (.getArray v)))
+  (read-column-by-index [^java.sql.Array v _2 _3]
+    (vec (.getArray v)))
+  org.postgresql.util.PGobject
+  (read-column-by-label [^org.postgresql.util.PGobject pgobj _]
+    (pgobj->clj pgobj))
+  (read-column-by-index [^org.postgresql.util.PGobject pgobj _2 _3]
+    (pgobj->clj pgobj)))
 
-(defn to-pg-json [value]
+(defn clj->jsonb-pgobj [value]
   (doto (PGobject.)
     (.setType "jsonb")
     (.setValue (generate-string value))))
 
-(extend-type clojure.lang.IPersistentVector
-  jdbc/ISQLParameter
-  (set-parameter [v ^java.sql.PreparedStatement stmt ^long idx]
+(extend-protocol next.jdbc.prepare/SettableParameter
+  clojure.lang.IPersistentMap
+  (set-parameter [^clojure.lang.IPersistentMap v ^java.sql.PreparedStatement stmt ^long idx]
+    (.setObject stmt idx (clj->jsonb-pgobj v)))
+  clojure.lang.IPersistentVector
+  (set-parameter [^clojure.lang.IPersistentVector v ^java.sql.PreparedStatement stmt ^long idx]
     (let [conn      (.getConnection stmt)
           meta      (.getParameterMetaData stmt)
           type-name (.getParameterTypeName meta idx)]
-      (if-let [elem-type (when (= (first type-name) \_) (apply str (rest type-name)))]
+      (if-let [elem-type (when (= (first type-name) \_)
+                           (apply str (rest type-name)))]
         (.setObject stmt idx (.createArrayOf conn elem-type (to-array v)))
-        (.setObject stmt idx (to-pg-json v))))))
-
-(extend-protocol jdbc/ISQLValue
-  java.util.Date
-  (sql-value [v]
-    (java.sql.Timestamp. (.getTime v)))
-  java.time.LocalTime
-  (sql-value [v]
-    (jt/sql-time v))
-  java.time.LocalDate
-  (sql-value [v]
-    (jt/sql-date v))
-  java.time.LocalDateTime
-  (sql-value [v]
-    (jt/sql-timestamp v))
-  java.time.ZonedDateTime
-  (sql-value [v]
-    (jt/sql-timestamp v))
-  IPersistentMap
-  (sql-value [value] (to-pg-json value))
-  IPersistentVector
-  (sql-value [value] (to-pg-json value)))
-
-;; (defn record-kebab->snake
-;;   [record]
-;;   (->> record
-;;        (transform-keys ->snake_case)))
-
-;; (defn records-kebab->snake
-;;   [records]
-;;   (->> records
-;;        (map #(transform-keys ->snake_case %))))
-
-;; (defn result-one-snake->kebab
-;;   [this result options]
-;;   (->> (hugsql.adapter/result-one this result options)
-;;        (transform-keys ->kebab-case-keyword)))
-
-;; (defn result-many-snake->kebab
-;;   [this result options]
-;;   (->> (hugsql.adapter/result-many this result options)
-;;        (map #(transform-keys ->kebab-case-keyword %))))
-
-;; (defmethod hugsql.core/hugsql-result-fn :1 [sym]
-;;   'tservice.db.core/result-one-snake->kebab)
-
-;; (defmethod hugsql.core/hugsql-result-fn :one [sym]
-;;   'tservice.db.core/result-one-snake->kebab)
-
-;; (defmethod hugsql.core/hugsql-result-fn :* [sym]
-;;   'tservice.db.core/result-many-snake->kebab)
-
-;; (defmethod hugsql.core/hugsql-result-fn :many [sym]
-;;   'tservice.db.core/result-many-snake->kebab)
+        (.setObject stmt idx (clj->jsonb-pgobj v))))))

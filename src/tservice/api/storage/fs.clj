@@ -1,4 +1,4 @@
-(ns tservice.lib.filter-files
+(ns tservice.api.storage.fs
   (:require [clojure.java.io :as io]
             [me.raynes.fs :as fs]
             [tservice.lib.fs :as fs-lib]
