@@ -57,18 +57,19 @@
     :or {summary ""
          response-schema (get-response-schema response-type)}}]
   {:route [(str "/report/" name)
-           :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
-                  :parameters {:body params-schema}
-                  :responses {201 {:body response-schema}}
-                  :handler (fn [{{:keys [body]} :parameters}]
-                             {:status 201
-                              :body (make-response response-type (handler body))})}
-           :get {:summary (format "A json schema for %s" name)
-                 :parameters {}
-                 :responses {200 {:body map?}}
-                 :handler (fn [_]
-                            {:status 200
-                             :body (json-schema/transform params-schema)})}]
+           {:tags ["Report"]
+            :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
+                   :parameters {:body params-schema}
+                   :responses {201 {:body response-schema}}
+                   :handler (fn [{{:keys [body]} :parameters}]
+                              {:status 201
+                               :body (make-response response-type (handler body))})}
+            :get {:summary (format "A json schema for %s" name)
+                  :parameters {}
+                  :responses {200 {:body map?}}
+                  :handler (fn [_]
+                             {:status 200
+                              :body (json-schema/transform params-schema)})}}]
    :manifest (get-manifest-data)})
 
 ;;; ------------------------------------------------ Event Metadata -------------------------------------------------
