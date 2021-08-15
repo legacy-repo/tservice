@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS tservice_entity_tag;
 DROP TABLE IF EXISTS tservice_tag;
 
 --;;
-DROP TABLE IF EXISTS tservice_report;
+DROP TABLE IF EXISTS tservice_task;
 
 --;;
 DROP TABLE IF EXISTS qrtz_blob_triggers;

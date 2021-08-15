@@ -1,5 +1,5 @@
 (defproject tservice "lein-git-inject/version"
-
+  ;; How to set project.clj? More details on https://github.com/technomancy/leiningen/blob/master/sample.project.clj
   :description "Make tool as a service."
   :url "https://github.com/clinico-omics/tservice"
 
@@ -61,12 +61,14 @@
                  [ring/ring-servlet "1.7.1"]
                  [org.clojure/data.csv "1.0.0"]
                  [selmer "1.12.27"]
+                 [org.clojars.yjcyxky/coql "0.1.0"]                                 ; Turn query json into SQL.
                  [clj-filesystem "0.2.7"]
                  [io.forward/yaml "1.0.9"                                           ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
                   :exclusions [org.clojure/clojure
                                org.flatland/ordered
                                org.yaml/snakeyaml]]
-                 [org.yaml/snakeyaml "1.23"]]                                        ; YAML parser (required by liquibase)
+                 [org.yaml/snakeyaml "1.23"]                                       ; YAML parser (required by liquibase)
+                 [expound "0.8.9"]]                                                ; Human-optimized error messages for clojure.spec
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]
@@ -85,6 +87,9 @@
   :resource-paths ["resources"]
   :target-path "target/%s/"
   :main ^:skip-aot tservice.core
+
+  :global-vars {*warn-on-reflection* true
+                *assert* true}
 
   :plugins [[lein-uberwar "0.2.0"]
             [day8/lein-git-inject "0.0.15"]

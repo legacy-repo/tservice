@@ -89,7 +89,7 @@
 (defn- setup-repo
   "Sets the location of the local clojure repository used
    by `load-plugins` or `load-plugin`"
-  ([path] (reset! repo (fs/expand-home path)))
+  ([path] (reset! repo path))
   ([] (setup-repo (get-plugin-dir))))
 
 (defn- setup-plugins

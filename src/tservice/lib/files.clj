@@ -133,19 +133,23 @@
 ;;; |                                               Environment                                                |
 ;;; +----------------------------------------------------------------------------------------------------------------+
 
+(defn get-tservice-workdir
+  []
+  (clj-str/replace
+   (fs/expand-home (get-in env [:tservice-workdir]))
+   #"\/$" ""))
+
 (defn get-workdir
   ([]
-   (fs/expand-home (get-in env [:tservice-workdir])))
-  ([type]
-   (cond
-     (= type "Endpoint") (fs/join-paths (get-workdir) "endpoints")
-     (= type "Tool") (fs/join-paths (get-workdir) "tools")
-     (= type "Report") (fs/join-paths (get-workdir) "reports")
-     :else (get-workdir))))
+   (fs/join-paths (get-tservice-workdir) (u/uuid)))
+  ([username]
+   (fs/join-paths (get-tservice-workdir) username (u/uuid))))
 
 (defn- get-plugin-basedir
   []
-  (get-in env [:tservice-plugin-path]))
+  (clj-str/replace
+   (fs/expand-home (get-in env [:tservice-plugin-path]))
+   #"\/$" ""))
 
 (defn get-plugin-dir
   []
@@ -202,6 +206,10 @@
       (clj-str/replace filepath #"^file:\/\/" "")
       (fs/join-paths (get-workdir) (clj-str/replace filepath #"^file:\/\/" "")))
     filepath))
+
+(defn get-relative-filepath
+  [filepath]
+  (clj-str/replace filepath (re-pattern (get-tservice-workdir)) "."))
 
 (defn which
   [bin-name]

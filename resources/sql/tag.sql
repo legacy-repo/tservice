@@ -4,7 +4,7 @@
 
 ---------------------------------------------------------------------------------------------
 -- Table Name: tservice_tag
--- Description: Managing tags for choppy_app, project, report etc.
+-- Description: Managing tags for task, data etc.
 -- Functions: create-tag!, get-tag-count, search-tags, delete-tag!
 ---------------------------------------------------------------------------------------------
 

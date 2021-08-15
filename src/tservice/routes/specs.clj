@@ -2,17 +2,14 @@
   (:require [clojure.spec.alpha :as s]
             [spec-tools.core :as st]))
 
-(s/def ::uuid
+;; More Details for `:type`: https://cljdoc.org/d/metosin/spec-tools/0.6.1/doc/readme#type-based-conforming
+(s/def ::id
   (st/spec
-   {:spec                #(re-find #"^[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}$" %)
-    :type                :string
-    :description         "uuid string"
+   {:spec                #(some? (re-matches #"[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}" %))
+    :type                :uuid
+    :description         "Task ID"
     :swagger/default     "40644dec-1abd-489f-a7a8-1011a86f40b0"
-    :reason              "Not valid a uuid."}))
-
-(def uuid-spec
-  (s/keys :req-un [::uuid]
-          :opt-un []))
+    :reason              "Not valid a task id"}))
 
 (s/def ::page
   (st/spec
@@ -30,63 +27,62 @@
     :swagger/default     10
     :reason              "The per-page parameter can't be none."}))
 
-(s/def ::id
-  (st/spec
-   {:spec                #(some? (re-matches #"[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}" %))
-    :type                :string
-    :description         "report-id"
-    :swagger/default     "40644dec-1abd-489f-a7a8-1011a86f40b0"
-    :reason              "Not valid a report-id."}))
-
-;; -------------------------------- Report Spec --------------------------------
-(s/def ::app_name
+;; -------------------------------- Task Spec --------------------------------
+(s/def ::name
   (st/spec
    {:spec                string?
     :type                :string
-    :description         "The name of the app"
+    :description         "The name of the plugin"
     :swagger/default     ""
-    :reason              "Not a valid app name"}))
-
-(s/def ::report_name
-  (st/spec
-   {:spec                string?
-    :type                :string
-    :description         "The name of the record"
-    :swagger/default     ""
-    :reason              "Not a valid report name"}))
+    :reason              "Not a valid plugin name"}))
 
 (s/def ::description
   (st/spec
    {:spec                string?
     :type                :string
-    :description         "Description of the record"
+    :description         "Description of the task"
     :swagger/default     ""
     :reason              "Not a valid description."}))
 
-; {"plugin-name": "quartet-rnaseq-report", "metadata": "{}"}
-; (s/def ::script
-;   (st/spec
-;    {:spec                string?
-;     :type                :string
-;     :description         "Script of the record"
-;     :swagger/default     ""
-;     :reason              "Not a valid script"}))
+(s/def ::payload
+  (st/spec
+   {:spec                map?
+    :type                :map
+    :description         "Payload of the task"
+    :swagger/default     ""
+    :reason              "Not a valid payload"}))
 
-(s/def ::report_path
+(s/def ::plugin_name
   (st/spec
    {:spec                string?
     :type                :string
-    :description         "Report path of the record"
+    :description         "The name of the plugin"
     :swagger/default     ""
-    :reason              "Not a valid report_path"}))
+    :reason              "Not a valid plugin name"}))
 
-(s/def ::log
+(s/def ::plugin_type
+  (st/spec
+   {:spec                #(#{"ReportPlugin" "StatPlugin" "DataPlugin"} %)
+    :type                :string
+    :description         "Filter tasks by plugin_type field."
+    :swagger/default     "ReportPlugin"
+    :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`"}))
+
+(s/def ::plugin_version
   (st/spec
    {:spec                string?
     :type                :string
-    :description         "Log of the record"
+    :description         "The version of the plugin"
     :swagger/default     ""
-    :reason              "Not a valid log"}))
+    :reason              "Not a valid plugin version"}))
+
+(s/def ::response
+  (st/spec
+   {:spec                map?
+    :type                :map
+    :description         "Response of the task"
+    :swagger/default     ""
+    :reason              "Not a valid response"}))
 
 (s/def ::started_time
   (st/spec
@@ -104,30 +100,6 @@
     :swagger/default     ""
     :reason              "Not a valid finished_time"}))
 
-(s/def ::archived_time
-  (st/spec
-   {:spec                nat-int?
-    :type                :integer
-    :description         "Archived time of the record"
-    :swagger/default     ""
-    :reason              "Not a valid archived_time"}))
-
-(s/def ::project_id
-  (st/spec
-   {:spec                #(some? (re-matches #"[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}" %))
-    :type                :string
-    :description         "project-id"
-    :swagger/default     "40644dec-1abd-489f-a7a8-1011a86f40b0"
-    :reason              "Not valid a project-id."}))
-
-(s/def ::report_type
-  (st/spec
-   {:spec                string?
-    :type                :string
-    :description         "Filter results by report-type field."
-    :swagger/default     "multireport"
-    :reason              "Not valid report-type, only support multireport"}))
-
 (s/def ::status
   (st/spec
    {:spec                #(#{"Started" "Finished" "Archived" "Failed"} %)
@@ -136,24 +108,24 @@
     :swagger/default     "Started"
     :reason              "Not valid status, only support Started, Finished, Archived, Failed."}))
 
-(s/def ::report-id
+(s/def ::percentage
   (st/spec
-   {:spec                #(some? (re-matches #"[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}" %))
-    :type                :string
-    :description         "report-id"
-    :swagger/default     ""
-    :reason              "Not valid a report-id"}))
+   {:spec                int?
+    :type                :long
+    :description         "Percentage, From 0."
+    :swagger/default     0
+    :reason              "The percentage parameter can't be none."}))
 
-(def report-id
+(def task-id
   (s/keys :req-un [::id]
           :opt-un []))
 
-(def report-params-query
+(def task-params-query
   "A spec for the query parameters."
   (s/keys :req-un []
-          :opt-un [::page ::per_page ::app_name ::project_id ::report_type ::status]))
+          :opt-un [::page ::per_page ::plugin_type ::status]))
 
-(def report-body
-  "A spec for the report body."
-  (s/keys :req-un [::report_name ::description ::started_time ::report_type ::status ::app_name]
-          :opt-un [::archived_time ::finished_time ::log ::report_path ::project_id ::report-id]))
+(def task-body
+  "A spec for the task body."
+  (s/keys :req-un [::name ::plugin_name ::plugin_type ::plugin_version]
+          :opt-un [::description ::payload ::response ::started_time ::finished_time ::status ::percentage]))

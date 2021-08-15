@@ -8,8 +8,8 @@
   {:init
    (fn []
      (parser/cache-off!)
-     (log/info "\n-=[tservice started successfully using the development profile]=-"))
+     (log/info "-=[tservice started successfully using the development profile]=-"))
    :stop
    (fn []
-     (log/info "\n-=[tservice has shut down successfully]=-"))
+     (log/info "-=[tservice has shut down successfully]=-"))
    :middleware wrap-dev})

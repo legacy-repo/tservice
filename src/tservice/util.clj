@@ -150,7 +150,7 @@
             :let  [zip-in-s (.getInputStream zipf entry)
                    out-file (io/file (str to-dir
                                           java.io.File/separator
-                                          (.getName entry)))]]
+                                          (.getName ^ZipArchiveEntry entry)))]]
       (log/trace "  ->" (.getName out-file))
       (io/make-parents out-file)
       (with-open [entry-o-s (io/output-stream out-file)]

@@ -1,37 +1,19 @@
 -- how to run multiple statements in the migrations?
 -- See https://github.com/yogthos/migratus#multiple-statements for more details
-CREATE TABLE IF NOT EXISTS tservice_report (
+CREATE TABLE IF NOT EXISTS tservice_task (
   id VARCHAR(36) PRIMARY KEY,
-  report_name VARCHAR(64) NOT NULL UNIQUE,
-  project_id VARCHAR(36),
-  app_name VARCHAR(64) NOT NULL,
+  name VARCHAR(64) NOT NULL,
   description TEXT,
+  payload JSON,
+  plugin_name VARCHAR(64) NOT NULL,
+  plugin_type VARCHAR(32) NOT NULL,
+  plugin_version VARCHAR(32) NOT NULL,
+  response JSON,
   started_time BIGINT NOT NULL,
   finished_time BIGINT,
-  archived_time BIGINT,
-  report_path VARCHAR(255),
-  report_type VARCHAR(32) NOT NULL,
   status VARCHAR(32) NOT NULL,
-  log TEXT
+  percentage INTEGER
 );
-
---;;
-COMMENT ON TABLE tservice_report IS 'Used for report.';
-
---;;
-COMMENT ON COLUMN tservice_report.id IS 'uuid for report';
-
---;;
-COMMENT ON COLUMN tservice_report.app_name IS 'Auto generated script for making a report';
-
---;;
-COMMENT ON COLUMN tservice_report.report_path IS 'A relative path of a report based on the report directory';
-
---;;
-COMMENT ON COLUMN tservice_report.report_type IS 'multiqc';
-
---;;
-COMMENT ON COLUMN tservice_report.status IS 'Started, Finished, Archived, Failed';
 
 --;;
 CREATE TABLE IF NOT EXISTS tservice_tag (
@@ -41,12 +23,9 @@ CREATE TABLE IF NOT EXISTS tservice_tag (
 );
 
 --;;
-COMMENT ON TABLE tservice_tag IS 'Used for tagging report etc.';
-
---;;
 CREATE TABLE IF NOT EXISTS tservice_entity_tag (
   id SERIAL NOT NULL,
-  -- entity_id may contains report id etc.
+  -- entity_id may contains task id etc.
   entity_id VARCHAR(32),
   entity_type VARCHAR(32),
   tag_id INT,
@@ -54,9 +33,7 @@ CREATE TABLE IF NOT EXISTS tservice_entity_tag (
   CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tservice_tag(id)
 );
 
---;;
-COMMENT ON TABLE tservice_entity_tag IS 'Used for connecting other entity and tag table.';
-
+-- More details on https://github.com/quartznet/quartznet/blob/main/database/tables/tables_sqlite.sql
 --;;
 CREATE TABLE qrtz_job_details (
   sched_name VARCHAR(120) NOT NULL,
@@ -70,10 +47,7 @@ CREATE TABLE qrtz_job_details (
   requests_recovery BOOLEAN NOT NULL,
   job_data BYTEA,
   CONSTRAINT pk_qrtz_job_details PRIMARY KEY (sched_name, job_name, job_group)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_job_details IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_triggers (
@@ -94,11 +68,8 @@ CREATE TABLE qrtz_triggers (
   misfire_instr SMALLINT,
   job_data BYTEA,
   CONSTRAINT pk_qrtz_triggers PRIMARY KEY (sched_name, trigger_name, trigger_group),
-  CONSTRAINT fk_qrtz_triggers_job_details FOREIGN KEY (sched_name, job_name, job_group) REFERENCES qrtz_job_details(sched_name, job_name, job_group) ON UPDATE NO ACTION ON DELETE NO ACTION NOT VALID
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_triggers IS 'Used for Quartz scheduler.';
+  CONSTRAINT fk_qrtz_triggers_job_details FOREIGN KEY (sched_name, job_name, job_group) REFERENCES qrtz_job_details(sched_name, job_name, job_group)
+);
 
 --;;
 CREATE TABLE qrtz_calendars (
@@ -106,10 +77,7 @@ CREATE TABLE qrtz_calendars (
   calendar_name VARCHAR(200) NOT NULL,
   calendar BYTEA NOT NULL,
   CONSTRAINT pk_qrtz_calendars PRIMARY KEY (sched_name, calendar_name)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_calendars IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_cron_triggers (
@@ -119,11 +87,8 @@ CREATE TABLE qrtz_cron_triggers (
   cron_expression VARCHAR(120) NOT NULL,
   time_zone_id VARCHAR(80),
   CONSTRAINT pk_qrtz_cron_triggers PRIMARY KEY (sched_name, trigger_name, trigger_group),
-  CONSTRAINT fk_qrtz_cron_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group) ON UPDATE NO ACTION ON DELETE NO ACTION NOT VALID
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_cron_triggers IS 'Used for Quartz scheduler.';
+  CONSTRAINT fk_qrtz_cron_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group)
+);
 
 --;;
 CREATE TABLE qrtz_fired_triggers (
@@ -141,30 +106,21 @@ CREATE TABLE qrtz_fired_triggers (
   is_nonconcurrent BOOLEAN,
   requests_recovery BOOLEAN,
   CONSTRAINT pk_qrtz_fired_triggers PRIMARY KEY (sched_name, entry_id)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_fired_triggers IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_locks (
   sched_name VARCHAR(120) NOT NULL,
   lock_name VARCHAR(40) NOT NULL,
   CONSTRAINT pk_qrtz_locks PRIMARY KEY (sched_name, lock_name)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_locks IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_paused_trigger_grps (
   sched_name VARCHAR(120) NOT NULL,
   trigger_group VARCHAR(200) NOT NULL,
   CONSTRAINT pk_qrtz_paused_trigger_grps PRIMARY KEY (sched_name, trigger_group)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_paused_trigger_grps IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_scheduler_state (
@@ -173,10 +129,7 @@ CREATE TABLE qrtz_scheduler_state (
   last_checkin_time BIGINT NOT NULL,
   checkin_interval BIGINT NOT NULL,
   CONSTRAINT pk_qrtz_scheduler_state PRIMARY KEY (sched_name, instance_name)
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_scheduler_state IS 'Used for Quartz scheduler.';
+);
 
 --;;
 CREATE TABLE qrtz_simple_triggers (
@@ -187,11 +140,8 @@ CREATE TABLE qrtz_simple_triggers (
   repeat_interval BIGINT NOT NULL,
   times_triggered BIGINT NOT NULL,
   CONSTRAINT pk_qrtz_simple_triggers PRIMARY KEY (sched_name, trigger_name, trigger_group),
-  CONSTRAINT fk_qrtz_simple_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group) ON UPDATE NO ACTION ON DELETE NO ACTION NOT VALID
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_simple_triggers IS 'Used for Quartz scheduler.';
+  CONSTRAINT fk_qrtz_simple_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group)
+);
 
 --;;
 CREATE TABLE qrtz_simprop_triggers (
@@ -210,11 +160,8 @@ CREATE TABLE qrtz_simprop_triggers (
   bool_prop_1 BOOLEAN,
   bool_prop_2 BOOLEAN,
   CONSTRAINT pk_qrtz_simprop_triggers PRIMARY KEY (sched_name, trigger_name, trigger_group),
-  CONSTRAINT fk_qrtz_simprop_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group) ON UPDATE NO ACTION ON DELETE NO ACTION NOT VALID
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_simprop_triggers IS 'Used for Quartz scheduler.';
+  CONSTRAINT fk_qrtz_simprop_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group)
+);
 
 --;;
 CREATE TABLE IF NOT EXISTS qrtz_blob_triggers (
@@ -223,10 +170,7 @@ CREATE TABLE IF NOT EXISTS qrtz_blob_triggers (
   trigger_group VARCHAR(200) NOT NULL,
   blob_data BYTEA,
   CONSTRAINT pk_qrtz_blob_triggers PRIMARY KEY (sched_name, trigger_name, trigger_group),
-  CONSTRAINT fk_qrtz_blob_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group) ON UPDATE NO ACTION ON DELETE NO ACTION NOT VALID
-) WITH (FILLFACTOR = 100, OIDS = FALSE);
-
---;;
-COMMENT ON TABLE qrtz_blob_triggers IS 'Used for Quartz scheduler.';
+  CONSTRAINT fk_qrtz_blob_triggers_triggers FOREIGN KEY (sched_name, trigger_name, trigger_group) REFERENCES qrtz_triggers(sched_name, trigger_name, trigger_group)
+);
 
 --;;

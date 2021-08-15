@@ -20,7 +20,7 @@
 
 (conman/bind-connection *db*
                         "sql/tag.sql"
-                        "sql/report.sql")
+                        "sql/task.sql")
 
 (defn pgobj->clj [^org.postgresql.util.PGobject pgobj]
   (let [type (.getType pgobj)

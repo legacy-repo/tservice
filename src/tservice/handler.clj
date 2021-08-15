@@ -2,15 +2,12 @@
   (:require
    [tservice.middleware :as middleware]
    [tservice.routes.services :refer [service-routes]]
-   [reitit.swagger-ui :as swagger-ui]
    [reitit.ring :as ring]
    [ring.middleware.content-type :refer [wrap-content-type]]
    [ring.middleware.webjars :refer [wrap-webjars]]
    [tservice.env :refer [defaults]]
-   [ring.middleware.file :refer [wrap-file]]
    [mount.core :as mount]
    [clojure.tools.logging :as log]
-   [tservice.lib.files :refer [get-workdir]]
    [reitit.spec :as rs]
    [reitit.dev.pretty :as pretty]
    [tservice.plugin :as plugin]
@@ -44,10 +41,6 @@
    (ring/router
     [["/" {:get
            {:handler (constantly {:status 301 :headers {"Location" "/api/api-docs/index.html"}})}}]
-     ["/reports/*" (-> (ring/create-resource-handler {:path "/"})
-                       (wrap-file (get-workdir)))]  ; <ROOT>/reports/, for MultiQC HTML file
-     ["/download/*" (-> (ring/create-resource-handler {:path "/"})
-                        (wrap-file (get-workdir)))]
      ; TODO: Duplicated routes?
      (concat (service-routes) (plugin/get-routes) (plugin-jars/get-routes))]
 

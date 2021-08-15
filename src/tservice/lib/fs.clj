@@ -6,12 +6,13 @@
             [clj-file-zip.core :as clj-zip])
   (:import (java.nio.file CopyOption
                           Files
+                          FileSystem
                           FileSystems
                           LinkOption
                           NoSuchFileException
                           Path
                           StandardCopyOption)
-           (java.util.zip ZipEntry ZipOutputStream)
+           (java.io File)
            (java.nio.file.attribute FileAttribute
                                     PosixFilePermissions
                                     UserPrincipalNotFoundException)))
@@ -52,12 +53,12 @@
   (.toPath (apply as-file path paths)))
 
 (defn ^:private first-path-segment
-  [path]
+  [^String path]
   (first (map str (as-path path))))
 
 (defn expand-home
   "Takes a path and expands leading reference to `~` to be the current user's home directory."
-  [path]
+  [^String path]
   (if (and (.startsWith path "~")
            (= "~" (first-path-segment path)))
     (str home (subs path 1))
@@ -183,12 +184,12 @@
   (.getName (as-file path)))
 
 (defn filename
-  [path]
+  [^String path]
   (when-not (.endsWith path file-separator)
     (last-path-segment path)))
 
 (defn parent-path
-  [path]
+  [^String path]
   (.getParent (as-file path)))
 
 (defn parent-paths
@@ -222,14 +223,14 @@
     path))
 
 (defn normalize-path
-  [path]
+  [^String path]
   (-> (as-file path)
       .toPath
       .normalize
       .toString))
 
 (defn absolute-path?
-  [path]
+  [^String path]
   (.isAbsolute (as-file path)))
 
 (defn relative-path?
@@ -237,17 +238,17 @@
   (not (absolute-path? path)))
 
 (defn absolute-path
-  [path]
+  [^String path]
   (.getAbsolutePath (as-file path)))
 
 (defn canonical-path
-  [path]
+  [^String path]
   (.getCanonicalPath (as-file path)))
 
 (defn children
   ([]
    (children "."))
-  ([path]
+  ([^String path]
    (vec (.list (as-file path)))))
 
 (defn size
@@ -483,11 +484,11 @@
        (.delete (as-file path))))))
 
 (defn file-system-for
-  [path]
+  [^String path]
   (.getFileSystem (as-path path)))
 
 (defn supported-file-attribute-views
-  [path]
+  [^String path]
   (.supportedFileAttributeViews (file-system-for path)))
 
 (defn get-attribute
@@ -648,7 +649,7 @@
 
 (defn with-temp-file*
   [f]
-  (with-temp-directory [dir-path]
+  (with-temp-directory [^String dir-path]
     (let [file-path (canonical-path (Files/createTempFile (as-path dir-path) "tmp" "tmp" (->file-attributes)))]
       (f dir-path file-path))))
 
