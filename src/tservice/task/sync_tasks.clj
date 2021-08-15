@@ -13,23 +13,23 @@
 (defn- count-started-tasks []
   (:count (db-handler/get-task-count {:query-map {:status "Started"}})))
 
-(defn- get-started-tasks [page per-page]
+(defn- get-started-tasks [page page-size]
   (:data (db-handler/search-tasks
           {:query-map {:status "Started"}}
-          page per-page)))
+          page page-size)))
 
-(defn- total-page [total per-page]
-  (if (= (rem total per-page) 0)
-    (quot total per-page)
-    (+ (quot total per-page) 1)))
+(defn- total-page [total page-size]
+  (if (= (rem total page-size) 0)
+    (quot total page-size)
+    (+ (quot total page-size) 1)))
 
 (defn- sync-tasks! []
-  (let [per-page   10
+  (let [page-size   10
         nums-of-tasks (count-started-tasks)
-        total-page (+ (total-page nums-of-tasks per-page) 1)]
+        total-page (+ (total-page nums-of-tasks page-size) 1)]
     (log/debug "Num of Tasks: " nums-of-tasks)
     (doseq [which-page (range 1 total-page)]
-      (let [tasks (get-started-tasks which-page per-page)]
+      (let [tasks (get-started-tasks which-page page-size)]
         (log/debug "Tasks: " tasks)
         (doseq [task tasks]
           (log/debug "Syncing Task: " task)

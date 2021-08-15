@@ -6,7 +6,7 @@
 (s/def ::id
   (st/spec
    {:spec                #(some? (re-matches #"[a-f0-9]{8}(-[a-f0-9]{4}){4}[a-f0-9]{8}" %))
-    :type                :uuid
+    :type                :string
     :description         "Task ID"
     :swagger/default     "40644dec-1abd-489f-a7a8-1011a86f40b0"
     :reason              "Not valid a task id"}))
@@ -19,13 +19,13 @@
     :swagger/default     1
     :reason              "The page parameter can't be none."}))
 
-(s/def ::per_page
+(s/def ::page_size
   (st/spec
    {:spec                nat-int?
     :type                :long
     :description         "Num of items per page."
     :swagger/default     10
-    :reason              "The per-page parameter can't be none."}))
+    :reason              "The page_size parameter can't be none."}))
 
 ;; -------------------------------- Task Spec --------------------------------
 (s/def ::name
@@ -62,8 +62,8 @@
 
 (s/def ::plugin_type
   (st/spec
-   {:spec                #(#{"ReportPlugin" "StatPlugin" "DataPlugin"} %)
-    :type                :string
+   {:spec                #{"ReportPlugin" "StatPlugin" "DataPlugin"}
+    :type                :set
     :description         "Filter tasks by plugin_type field."
     :swagger/default     "ReportPlugin"
     :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`"}))
@@ -102,8 +102,8 @@
 
 (s/def ::status
   (st/spec
-   {:spec                #(#{"Started" "Finished" "Archived" "Failed"} %)
-    :type                :string
+   {:spec                #{"Started" "Finished" "Failed"}
+    :type                :set
     :description         "Filter results by status field."
     :swagger/default     "Started"
     :reason              "Not valid status, only support Started, Finished, Archived, Failed."}))
@@ -123,7 +123,7 @@
 (def task-params-query
   "A spec for the query parameters."
   (s/keys :req-un []
-          :opt-un [::page ::per_page ::plugin_type ::status]))
+          :opt-un [::page ::page_size ::plugin_type ::status]))
 
 (def task-body
   "A spec for the task body."

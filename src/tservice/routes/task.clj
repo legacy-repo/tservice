@@ -14,15 +14,15 @@
             :parameters {:query specs/task-params-query}
             :responses  {200 {:body {:total    nat-int?
                                      :page     pos-int?
-                                     :per_page pos-int?
+                                     :page_size pos-int?
                                      :data     any?}}}
-            :handler    (fn [{{{:keys [page per_page status plugin_type]} :query} :parameters}]
+            :handler    (fn [{{{:keys [page page_size status plugin_type]} :query} :parameters}]
                           (let [query-map {:status      status
                                            :plugin_type plugin_type}]
-                            (log/debug "page: " page, "per-page: " per_page, "query-map: " query-map)
+                            (log/debug "page: " page, "page_size: " page_size, "query-map: " query-map)
                             (ok (db-handler/search-tasks {:query-map query-map}
                                                          page
-                                                         per_page))))}
+                                                         page_size))))}
 
      :post {:summary    "Create an task."
             :parameters {:body specs/task-body}

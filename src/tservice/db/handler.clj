@@ -19,12 +19,12 @@
 
 ;; Searching Results
 (s/def ::page number?)
-(s/def ::per-page number?)
+(s/def ::page_size number?)
 (s/def ::total number?)
 (s/def ::offset number?)
 (s/def ::id (or string? number?))
 (s/def ::data any?)
-(s/def ::search-results (s/keys :req-un [::total ::page ::per-page ::data]))
+(s/def ::search-results (s/keys :req-un [::total ::page ::page_size ::data]))
 
 ;; Task Record
 (s/def ::name string?)
@@ -59,11 +59,11 @@
 
 (defn- page->offset
   "Tranform page to offset."
-  [page per-page]
+  [page page-size]
   {:pre [(s/valid? ::page page)
-         (s/valid? ::per-page per-page)]
+         (s/valid? ::page_size page-size)]
    :post [(s/valid? ::offset %)]}
-  (* (- page 1) per-page))
+  (* (- page 1) page-size))
 
 (defn- make-query-map
   [where-map]
@@ -74,12 +74,12 @@
       (assoc :where-clause (:where-clause where-map))))
 
 (defn- search-entities
-  "Query database using query-map, page and per-page.
+  "Query database using query-map, page and page-size.
    
    Arguments:
      func-map[map]: query and count function from the specified database.
      page[number]: which page?
-     per-page[number]: how many items in one page?
+     page-size[number]: how many items in one page?
      where-map[map]: query map.
 
    Examples:
@@ -90,22 +90,22 @@
   "
   ([func-map] (search-entities func-map nil 1 10))
   ([func-map page] (search-entities func-map nil page 10))
-  ([func-map page per-page] (search-entities func-map nil page per-page))
-  ([func-map where-map page per-page]
+  ([func-map page page-size] (search-entities func-map nil page page-size))
+  ([func-map where-map page page-size]
    {:pre [(s/valid? ::func-map func-map)
           (s/valid? ::where-map where-map)
           (s/valid? ::page page)
-          (s/valid? ::per-page per-page)]
+          (s/valid? ::page_size page-size)]
     :post [(s/valid? ::search-results %)]}
    (let [page     (if (nil? page) 1 page)
-         per-page (if (nil? per-page) 10 per-page)
-         params   {:limit  per-page
-                   :offset (page->offset page per-page)}
+         page-size (if (nil? page-size) 10 page-size)
+         params   {:limit  page-size
+                   :offset (page->offset page page-size)}
          params   (merge params (make-query-map where-map))
-         metadata {:total    (:count ((:count-func func-map) params))
-                   :page     page
-                   :per_page per-page}]
-     (log/info "Query db by: " params)
+         metadata {:total     (or (:count ((:count-func func-map) params)) 0)
+                   :page      page
+                   :page_size page-size}]
+     (log/info "Query db by: " params, (merge metadata {:data ((:query-func func-map) params)}))
      (merge metadata {:data ((:query-func func-map) params)}))))
 
 (defn- search-entity

@@ -64,7 +64,7 @@
 
 (s/def ::database-url (s/and string? #(some? (re-matches #"jdbc:(sqlite|postgresql|h2):.*" %))))
 
-(s/def ::database #(#{"postgresql" "sqlite" "h2"} %))
+(s/def ::database #{"postgresql" "sqlite" "h2"})
 
 ;; More details on https://stackoverflow.com/a/537876
 (s/def ::external-bin (s/nilable #(some? (re-matches #"([^\\0]+:)*" %))))
@@ -73,10 +73,10 @@
 
 (s/def ::tservice-plugin-path (s/and string? exists?))
 
-(s/def ::tservice-run-mode #(#{"test" "dev" "prod"} %))
+(s/def ::tservice-run-mode #{"test" "dev" "prod"})
 
 ;; Service
-(s/def ::fs-service #(#{"minio" "oss" "s3"} %))
+(s/def ::fs-service #{"minio" "oss" "s3"})
 
 (s/def ::fs-endpoint #(some? (re-matches #"https?:\/\/.*" %)))
 
@@ -91,7 +91,7 @@
 
 (s/def ::fs-services (s/coll-of ::service))
 
-(s/def ::default-fs-service #(#{"minio" "oss" "s3"} %))
+(s/def ::default-fs-service #{"minio" "oss" "s3"})
 
 (s/def ::cron string?)
 
