@@ -48,16 +48,16 @@
       slurp
       json/read-str))
 
-(defmulti make-plugin-route :plugin-type)
+;; Support :ReportPlugin, :DataPlugin, :StatPlugin
+(defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
 
-(defmethod make-plugin-route :ReportPlugin
+(defmethod make-plugin-metadata :ReportPlugin
   make-report-plugin-route
-  [name params-schema handler response-type
-   & {:keys [summary response-schema]
-      :or {summary ""
-           response-schema (get-response-schema response-type)}}]
+  [{:keys [name params-schema handler plugin-type response-type summary response-schema]
+    :or {summary ""
+         response-schema (get-response-schema response-type)}}]
   {:route [(str "/report/" name)
-           :post {:summary (or summary (format "Plugin %s." name))
+           :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
                   :parameters {:body params-schema}
                   :responses {201 {:body response-schema}}
                   :handler (fn [{{:keys [body]} :parameters}]
