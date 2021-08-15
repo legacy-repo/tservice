@@ -96,11 +96,12 @@
   "Make a event process which handle processing for a single event notification received on the report-plugin-channel"
   []
   (fn [report-plugin-event]
+    (log/debug "Make Event Process: " report-plugin-event @report-plugin-events)
     ;; try/catch here to prevent individual topic processing exceptions from bubbling up.  better to handle them here.
     (try
       (when-let [{topic :topic object :item} report-plugin-event]
         ;; TODO: only if the definition changed??
-        (if-let [event-handler ((keyword (events/topic->model topic) @report-plugin-events))]
+        (if-let [event-handler (topic @report-plugin-events)]
           (event-handler object)
           (log/warn (format "No such event %s. (Events: %s)" @report-plugin-events report-plugin-event))))
       (catch Throwable e

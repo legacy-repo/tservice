@@ -15,9 +15,9 @@
   ((keyword response-type) schemas))
 
 (def ^:private response-identities
-  {:files2files #{"log" "files" "total"}
-   :files2report #{"log" "report"}})
+  {:files2files #{:log :files :total}
+   :files2report #{:log :report}})
 
 (defn get-reponse-keys
   [response-type]
-  (vector ((keyword response-type) response-identities)))
+  (vec ((keyword response-type) response-identities)))
