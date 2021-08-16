@@ -13,11 +13,3 @@
 (defn get-response-schema
   [response-type]
   ((keyword response-type) schemas))
-
-(def ^:private response-identities
-  {:files2files #{:log :files :total}
-   :files2report #{:log :report}})
-
-(defn get-reponse-keys
-  [response-type]
-  (vec ((keyword response-type) response-identities)))

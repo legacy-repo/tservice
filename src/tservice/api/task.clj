@@ -7,7 +7,8 @@
             [clojure.core.async :as async]
             [tservice.events :as events]
             [spec-tools.json-schema :as json-schema]
-            [tservice.api.schema.task :refer [get-response-schema get-reponse-keys]]))
+            [tservice.lib.files :refer [get-relative-filepath]]
+            [tservice.api.schema.task :refer [get-response-schema]]))
 
 (defn update-process!
   "Update the task process with running status and percentage.
@@ -36,11 +37,23 @@
   (apply db-handler/create-task! (apply concat task)))
 
 ;;; ------------------------------------------------ HTTP Metadata -------------------------------------------------
-(defn- make-response
-  "Convert the user's response into a standard response."
-  [response-type response]
-  (select-keys response
-               (get-reponse-keys response-type)))
+(def ^:private response-identities
+  {:files2files #{:log :files :total}
+   :files2report #{:log :report}})
+
+(defn get-reponse-keys
+  [response-type]
+  (vec ((keyword response-type) response-identities)))
+
+;;; Convert the user's response into a standard response(files2report/files2files)
+(defmulti make-response (fn [response] (:response-type response)))
+
+(defmethod make-response :files2report
+  make-files2report-response
+  [response]
+  {:log (get-relative-filepath (:log response) :filemode false)
+   :report (get-relative-filepath (:report response) :filemode false)
+   :response_type (:response-type response)})
 
 (defn- get-manifest-data
   []
@@ -63,7 +76,7 @@
                    :responses {201 {:body response-schema}}
                    :handler (fn [{{:keys [body]} :parameters}]
                               {:status 201
-                               :body (make-response response-type (handler body))})}
+                               :body (make-response (merge {:response-type (keyword response-type)} (handler body)))})}
             :get {:summary (format "A json schema for %s" name)
                   :parameters {}
                   :responses {200 {:body map?}}

@@ -208,8 +208,10 @@
     filepath))
 
 (defn get-relative-filepath
-  [filepath]
-  (clj-str/replace filepath (re-pattern (get-tservice-workdir)) "."))
+  [filepath & {:keys [filemode]
+               :or {filemode true}}]
+  (let [replace-str (if filemode "." "")]
+    (clj-str/replace filepath (re-pattern (get-tservice-workdir)) replace-str)))
 
 (defn which
   [bin-name]

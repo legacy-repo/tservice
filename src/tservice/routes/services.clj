@@ -8,15 +8,13 @@
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.swagger :as swagger]
-            [ring.util.http-response :refer [ok not-found]]
+            [ring.util.http-response :refer [ok]]
             [tservice.lib.files :refer [get-workdir get-relative-filepath]]
             [tservice.lib.fs :as fs-lib]
             [tservice.middleware.exception :as exception]
             [tservice.middleware.formats :as formats]
-            [tservice.db.handler :as db-handler]
             [tservice.plugin :as plugin]
             [tservice.plugin-jars :as plugin-jars]
-            [tservice.routes.specs :as specs]
             [tservice.routes.task :as task-route]))
 
 (defn service-routes []
