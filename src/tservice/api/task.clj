@@ -3,12 +3,14 @@
             [tservice.util :as util]
             [clojure.java.io :as io]
             [clojure.data.json :as json]
+            [clojure.string :as clj-str]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
             [tservice.events :as events]
             [spec-tools.json-schema :as json-schema]
-            [tservice.lib.files :refer [get-relative-filepath]]
-            [tservice.api.schema.task :refer [get-response-schema]]))
+            [tservice.lib.files :refer [get-relative-filepath slurp-file-from-archive get-plugin-jar-dir]]
+            [tservice.api.schema.task :refer [get-response-schema]]
+            [tservice.api.storage.fs :as fs]))
 
 (defn update-process!
   "Update the task process with running status and percentage.
@@ -55,18 +57,12 @@
    :report (get-relative-filepath (:report response) :filemode false)
    :response_type (:response-type response)})
 
-(defn get-manifest-data
-  [^String manifest-file]
-  (-> manifest-file
-      slurp
-      json/read-str))
-
 ;; Support :ReportPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
 
 (defmethod make-plugin-metadata :ReportPlugin
   make-report-plugin-route
-  [{:keys [^String name params-schema handler plugin-type response-type manifest
+  [{:keys [^String name params-schema handler plugin-type response-type
            ^String summary response-schema]
     :or {summary ""
          response-schema (get-response-schema response-type)}}]
@@ -83,8 +79,7 @@
                   :responses {200 {:body map?}}
                   :handler (fn [_]
                              {:status 200
-                              :body (json-schema/transform params-schema)})}}]
-   :manifest manifest})
+                              :body (json-schema/transform params-schema)})}}]})
 
 ;;; ------------------------------------------------ Event Metadata -------------------------------------------------
 (defonce ^:private report-plugin-events

@@ -156,6 +156,15 @@ info:
   name: Quartet DNA-Seq Report
   version: v1.0.1
   description: Parse the results of the quartet-dna-qc app and generate the report.
+  category: "Tool"
+  home: "https://github.com/clinico-omics/tservice-plugins"
+  source: "PGx"
+  short_name: "quartet-dnaseq-report"
+  icons:
+    - src: ""
+      type: "image/png"
+      sizes: "192x192"
+  author: "Jingcheng Yang"
 init:
   # Unpack environment file to the directory, repository/envs/quartet-dnaseq-report
   - step: unpack-env

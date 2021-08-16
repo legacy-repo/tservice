@@ -29,8 +29,10 @@
     (init-fn)))
 
 (defn load-and-register-plugin-metadata!
-  [^String entrypoint]
-  (let [metadata (load-plugin-metadata entrypoint)]
+  [^String entrypoint plugin-info]
+  (let [m (load-plugin-metadata entrypoint)
+        metadata {:route (:route m)
+                  :manifest (or (:manifest m) plugin-info)}]
     (if metadata
       (setup-plugins-metadata (cons metadata @plugins-metadata))
       (log/warn (format "%s is not a valid plugin: not found metadata" entrypoint)))))

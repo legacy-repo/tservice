@@ -19,8 +19,8 @@
   (let [{:keys [jar-path dest-dir]} context
         post-unpack-cmd (when postunpack
                           (files/render-template postunpack
-                                                   {:ENV_DEST_DIR dest-dir
-                                                    :ENV_NAME envname}))]
+                                                 {:ENV_DEST_DIR dest-dir
+                                                  :ENV_NAME envname}))]
     (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
     (when jar-path
       (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir)
@@ -32,8 +32,8 @@
   (log/info (u/format-color 'blue (format "Loading plugin namespace %s..." nmspace)))
   (classloader/require (symbol nmspace)))
 
-(defmethod do-init-step! :register-plugin [{entrypoint :entrypoint}]
-  (plugin-proxy/load-and-register-plugin-metadata! entrypoint))
+(defmethod do-init-step! :register-plugin [{entrypoint :entrypoint context :context}]
+  (plugin-proxy/load-and-register-plugin-metadata! entrypoint (:plugin-info context)))
 
 (defmethod do-init-step! :init-event [{entrypoint :entrypoint}]
   (plugin-proxy/init-event! entrypoint))

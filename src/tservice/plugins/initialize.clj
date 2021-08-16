@@ -14,10 +14,11 @@
 (defonce ^:private initialized-plugin-names (atom #{}))
 
 (defn- init!
-  [{:keys [add-to-classpath! jar-path], init-steps :init, {plugin-name :name} :info, plugin-or-plugins :plugin, :as info}]
+  [{:keys [add-to-classpath! jar-path], init-steps :init, 
+    {plugin-name :name} :info, plugin-or-plugins :plugin, :as manifest}]
   {:pre [(string? plugin-name)]}
 
-  (when (deps/all-dependencies-satisfied? @initialized-plugin-names info)
+  (when (deps/all-dependencies-satisfied? @initialized-plugin-names manifest)
     (let [plugins (u/one-or-many plugin-or-plugins)
           env-dest-dir (fs/join-paths (fs/parent-path jar-path) "envs")]
       ;; if *any* of the plugins is not lazy-load, initialize it now
@@ -26,8 +27,9 @@
           (add-to-classpath!))
         (when (not (fs/exists? env-dest-dir))
           (fs/create-directories! env-dest-dir))
-        (init-steps/do-init-steps! init-steps {:jar-path jar-path 
-                                               :dest-dir env-dest-dir})))
+        (init-steps/do-init-steps! init-steps {:jar-path jar-path
+                                               :dest-dir env-dest-dir
+                                               :plugin-info (:info manifest)})))
     ;; record this plugin as initialized and find any plugins ready to be initialized because depended on this one !
     ;;
     ;; Fun fact: we already have the `plugin-initialization-lock` if we're here so we don't need to worry about
@@ -35,7 +37,7 @@
     (let [plugins-ready-to-init (deps/update-unsatisfied-deps! (swap! initialized-plugin-names conj plugin-name))]
       (when (seq plugins-ready-to-init)
         (log/debug (u/format-color 'yellow (format "Dependencies satisfied; these plugins will now be loaded: %s"
-                                                (mapv (comp :name :info) plugins-ready-to-init)))))
+                                                   (mapv (comp :name :info) plugins-ready-to-init)))))
       (doseq [plugin-info plugins-ready-to-init]
         (init! plugin-info)))
     :ok))
