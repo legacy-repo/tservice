@@ -99,10 +99,14 @@
 
 (s/def ::tasks (s/map-of keyword? ::cron-map))
 
+(s/def ::enable-cors boolean?)
+
+(s/def ::cors-origins (s/nilable (s/coll-of string?)))
+
 (s/def ::config (s/keys :req-un [::port ::database-url ::tservice-workdir
                                  ::tservice-plugin-path ::tservice-run-mode
                                  ::fs-services ::default-fs-service]
-                        :opt-un [::nrepl-port ::tasks]))
+                        :opt-un [::nrepl-port ::tasks ::cors-origins ::enable-cors]))
 
 (defn check-config
   [env]

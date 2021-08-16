@@ -55,9 +55,9 @@
    :report (get-relative-filepath (:report response) :filemode false)
    :response_type (:response-type response)})
 
-(defn- get-manifest-data
-  []
-  (-> (io/resource "manifest.json")
+(defn get-manifest-data
+  [^String manifest-file]
+  (-> manifest-file
       slurp
       json/read-str))
 
@@ -66,7 +66,8 @@
 
 (defmethod make-plugin-metadata :ReportPlugin
   make-report-plugin-route
-  [{:keys [name params-schema handler plugin-type response-type summary response-schema]
+  [{:keys [^String name params-schema handler plugin-type response-type manifest
+           ^String summary response-schema]
     :or {summary ""
          response-schema (get-response-schema response-type)}}]
   {:route [(str "/report/" name)
@@ -83,7 +84,7 @@
                   :handler (fn [_]
                              {:status 200
                               :body (json-schema/transform params-schema)})}}]
-   :manifest (get-manifest-data)})
+   :manifest manifest})
 
 ;;; ------------------------------------------------ Event Metadata -------------------------------------------------
 (defonce ^:private report-plugin-events
