@@ -124,6 +124,11 @@
   [datetime]
   (coerce/to-long datetime))
 
+(defn datetime
+  []
+  (.format (java.text.SimpleDateFormat. "yyyy-MM-dd HH:mm:ss")
+           (new java.util.Date)))
+
 (defn now
   "Get the current local datetime."
   ([offset]

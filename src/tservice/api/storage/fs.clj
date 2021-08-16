@@ -4,6 +4,21 @@
             [tservice.lib.fs :as fs-lib]
             [clj-filesystem.core :as clj-fs]))
 
+;; -------------------------------- Re-export --------------------------------
+(def join-paths fs-lib/join-paths)
+
+(def create-directories! fs-lib/create-directories!)
+
+(def directory? fs-lib/directory?)
+
+(def regular-file? fs-lib/regular-file?)
+
+(def parent-path fs-lib/parent-path)
+
+(def zip-files fs-lib/zip-files)
+
+(def merge-pdf-files fs-lib/merge-pdf-files)
+
 (defn fs-service?
   [filepath]
   (re-matches #"^[a-zA-Z0-9]+:\/\/.*" filepath))

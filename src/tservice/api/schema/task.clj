@@ -5,10 +5,10 @@
 
 (s/def ::report string?)
 
-(s/def ::files2report (s/keys :req-un [::log ::report]))
+(s/def ::data2report (s/keys :req-un [::log ::report]))
 
 (def ^:private schemas
-  {:files2report ::files2report})
+  {:data2report ::data2report})
 
 (defn get-response-schema
   [response-type]

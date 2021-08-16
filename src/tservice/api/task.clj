@@ -1,16 +1,15 @@
 (ns tservice.api.task
   (:require [tservice.db.handler :as db-handler]
             [tservice.util :as util]
-            [clojure.java.io :as io]
-            [clojure.data.json :as json]
-            [clojure.string :as clj-str]
+            [tservice.events :as events]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
-            [tservice.events :as events]
             [spec-tools.json-schema :as json-schema]
-            [tservice.lib.files :refer [get-relative-filepath slurp-file-from-archive get-plugin-jar-dir]]
-            [tservice.api.schema.task :refer [get-response-schema]]
-            [tservice.api.storage.fs :as fs]))
+            [tservice.lib.files :refer [get-relative-filepath]]
+            [tservice.api.schema.task :refer [get-response-schema]]))
+
+;; -------------------------------- Re-export --------------------------------
+(def publish-event! events/publish-event!)
 
 (defn update-process!
   "Update the task process with running status and percentage.
@@ -33,31 +32,53 @@
     (db-handler/update-task! task-id record)))
 
 (defn create-task!
-  [& {:keys [name description payload plugin-name
-             plugin-type plugin-version response]
-      :as task}]
+  [{:keys [name description payload plugin-name
+           plugin-type plugin-version response]
+    :as task}]
   (apply db-handler/create-task! (apply concat task)))
 
 ;;; ------------------------------------------------ HTTP Metadata -------------------------------------------------
 (def ^:private response-identities
-  {:files2files #{:log :files :total}
-   :files2report #{:log :report}})
+  {:data2files #{:log :files :total}
+   :data2report #{:log :report}})
 
 (defn get-reponse-keys
   [response-type]
   (vec ((keyword response-type) response-identities)))
 
-;;; Convert the user's response into a standard response(files2report/files2files)
+;;; Convert the user's response into a standard response(data2report/data2files)
 (defmulti make-response (fn [response] (:response-type response)))
 
-(defmethod make-response :files2report
-  make-files2report-response
+(defmethod make-response :data2report
+  make-data2report-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :report (get-relative-filepath (:report response) :filemode false)
-   :response_type (:response-type response)})
+   :response_type :data2report})
 
-;; Support :ReportPlugin, :DataPlugin, :StatPlugin
+(defmethod make-response :data2files
+  make-data2report-response
+  [response]
+  {:log (get-relative-filepath (:log response) :filemode false)
+   :files (map #(get-relative-filepath % :filemode false) (:files response))
+   :response_type :data2files})
+
+(defn- gen-response
+  [{:keys [name summary plugin-type params-schema response-schema response-type handler]}]
+  {:get   {:summary (format "A json schema for %s" name)
+           :parameters {}
+           :responses {200 {:body map?}}
+           :handler (fn [_]
+                      {:status 200
+                       :body (json-schema/transform params-schema)})}
+   :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
+          :parameters {:body params-schema}
+          :responses {201 {:body response-schema}}
+          :handler (fn [{{:keys [body]} :parameters}]
+                     {:status 201
+                      :body (make-response (merge {:response-type (keyword response-type)} (handler body)))})}})
+
+;; Support :ReportPlugin, :DataPlugin, :StatPlugin, :ToolPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
 
 (defmethod make-plugin-metadata :ReportPlugin
@@ -67,19 +88,28 @@
     :or {summary ""
          response-schema (get-response-schema response-type)}}]
   {:route [(str "/report/" name)
-           {:tags ["Report"]
-            :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
-                   :parameters {:body params-schema}
-                   :responses {201 {:body response-schema}}
-                   :handler (fn [{{:keys [body]} :parameters}]
-                              {:status 201
-                               :body (make-response (merge {:response-type (keyword response-type)} (handler body)))})}
-            :get {:summary (format "A json schema for %s" name)
-                  :parameters {}
-                  :responses {200 {:body map?}}
-                  :handler (fn [_]
-                             {:status 200
-                              :body (json-schema/transform params-schema)})}}]})
+           (merge {:tags ["Report"]}
+                  (gen-response {:name name
+                                 :summary summary
+                                 :handler handler
+                                 :plugin-type plugin-type
+                                 :response-schema response-schema
+                                 :params-schema params-schema}))]})
+
+(defmethod make-plugin-metadata :ToolPlugin
+  make-tool-plugin-route
+  [{:keys [^String name params-schema handler plugin-type response-type
+           ^String summary response-schema]
+    :or {summary ""
+         response-schema (get-response-schema response-type)}}]
+  {:route [(str "/tool/" name)
+           (merge {:tags ["Tool"]}
+                  (gen-response {:name name
+                                 :summary summary
+                                 :handler handler
+                                 :plugin-type plugin-type
+                                 :response-schema response-schema
+                                 :params-schema params-schema}))]})
 
 ;;; ------------------------------------------------ Event Metadata -------------------------------------------------
 (defonce ^:private report-plugin-events
