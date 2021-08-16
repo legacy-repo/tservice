@@ -8,8 +8,11 @@
             [reitit.ring.middleware.parameters :as parameters]
             [reitit.swagger-ui :as swagger-ui]
             [reitit.swagger :as swagger]
+            [tservice.routes.specs :as specs]
+            [clojure.java.io :as io]
             [ring.util.http-response :refer [ok]]
-            [tservice.lib.files :refer [get-workdir get-relative-filepath]]
+            [ring.util.mime-type :as mime-type]
+            [tservice.lib.files :refer [get-workdir get-relative-filepath get-tservice-workdir]]
             [tservice.lib.fs :as fs-lib]
             [tservice.middleware.exception :as exception]
             [tservice.middleware.formats :as formats]
@@ -69,9 +72,19 @@
                           {:body {:msg "No manifest file."
                                   :status 404}})))}}]
 
+   ["/download"
+    {:tags ["File Management"]
+     :get {:summary "Downloads a file"
+           :parameters {:query specs/filelink-params-query}
+           :handler (fn [{{{:keys [filelink]} :query} :parameters}]
+                      {:status 200
+                       :headers {"Content-Type" (or (mime-type/ext-mime-type filelink) "text/plain")}
+                       :body (-> (fs-lib/join-paths (get-tservice-workdir) (str "." filelink))
+                                 (io/input-stream))})}}]
+
    ["/upload"
     {:tags ["File Management"]
-     :post {:summary "Uploading File."
+     :post {:summary "Uploads File(s)."
             :parameters {:multipart {:files (s/or :file multipart/temp-file-part :files (s/coll-of multipart/temp-file-part))}}
             :handler (fn [{{{:keys [files]} :multipart} :parameters}]
                        (let [files (if (map? files) [files] files)

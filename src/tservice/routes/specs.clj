@@ -116,6 +116,19 @@
     :swagger/default     0
     :reason              "The percentage parameter can't be none."}))
 
+(s/def ::filelink
+  (st/spec
+   {:spec                #(some? (re-matches #"^\/.*" %))
+    :type                :string
+    :description         "File link, such as /40644dec-1abd-489f-a7a8-1011a86f40b0/log"
+    :swagger/default     ""
+    :reason              "The filelink must be a string."}))
+
+(def filelink-params-query
+  "A spec for the query parameters of the download endpoint."
+  (s/keys :req-un [::filelink]
+          :opt-un []))
+
 (def task-id
   (s/keys :req-un [::id]
           :opt-un []))
