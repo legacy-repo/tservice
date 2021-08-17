@@ -1,7 +1,9 @@
 (ns tservice.api.task
   (:require [tservice.db.handler :as db-handler]
             [tservice.util :as util]
+            [clojure.data.json :as json]
             [tservice.events :as events]
+            [tservice.config :refer [which-database]]
             [clojure.tools.logging :as log]
             [clojure.core.async :as async]
             [spec-tools.json-schema :as json-schema]
@@ -11,36 +13,10 @@
 ;; -------------------------------- Re-export --------------------------------
 (def publish-event! events/publish-event!)
 
-(defn update-process!
-  "Update the task process with running status and percentage.
-   
-   Arguments:
-     - task-id: An UUID string.
-     - percentage: -1-100, -1 means Failed, 0-100 means the running percentage.
-
-   Examples:
-   (update-process! \"ff79d50e-6206-45fb-8bc3-6d2a0ec070ff\" \"Started\" 20) 
-  "
-  [^String task-id ^Integer percentage]
-  (let [record (cond
-                 (= percentage 100) {:status "Finished"
-                                     :percentage 100
-                                     :finished-time (util/time->int (util/now))}
-                 (= percentage -1) {:status "Failed"
-                                    :finished-time (util/time->int (util/now))}
-                 :else {:percentage percentage})]
-    (db-handler/update-task! task-id record)))
-
-(defn create-task!
-  [{:keys [name description payload plugin-name
-           plugin-type plugin-version response]
-    :as task}]
-  (apply db-handler/create-task! (apply concat task)))
-
-;;; ------------------------------------------------ HTTP Metadata -------------------------------------------------
+;; ----------------------------- HTTP Metadata -------------------------------
 (def ^:private response-identities
-  {:data2files #{:log :files :total}
-   :data2report #{:log :report}})
+  {:data2files #{:log :files :total :response_type}
+   :data2report #{:log :report :response_type}})
 
 (defn get-reponse-keys
   [response-type]
@@ -71,7 +47,7 @@
            :handler (fn [_]
                       {:status 200
                        :body (json-schema/transform params-schema)})}
-   :post {:summary (or summary (format "%s Plugin %s." plugin-type name))
+   :post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type name))
           :parameters {:body params-schema}
           :responses {201 {:body response-schema}}
           :handler (fn [{{:keys [body]} :parameters}]
@@ -85,7 +61,7 @@
   make-report-plugin-route
   [{:keys [^String name params-schema handler plugin-type response-type
            ^String summary response-schema]
-    :or {summary ""
+    :or {summary nil
          response-schema (get-response-schema response-type)}}]
   {:route [(str "/report/" name)
            (merge {:tags ["Report"]}
@@ -100,7 +76,7 @@
   make-tool-plugin-route
   [{:keys [^String name params-schema handler plugin-type response-type
            ^String summary response-schema]
-    :or {summary ""
+    :or {summary nil
          response-schema (get-response-schema response-type)}}]
   {:route [(str "/tool/" name)
            (merge {:tags ["Tool"]}
@@ -153,3 +129,35 @@
   (register-report-plugin-event! event-name event-handler)
   (fn []
     (events/start-event-listener! (get-report-plugin-topics) report-plugin-channel (make-event-process))))
+
+
+;; ----------------------------- Task Database -------------------------------
+(defn update-process!
+  "Update the task process with running status and percentage.
+   
+   Arguments:
+     - task-id: An UUID string.
+     - percentage: -1-100, -1 means Failed, 0-100 means the running percentage.
+
+   Examples:
+   (update-process! \"ff79d50e-6206-45fb-8bc3-6d2a0ec070ff\" \"Started\" 20) 
+  "
+  [^String task-id ^Integer percentage]
+  (let [record (cond
+                 (= percentage 100) {:status "Finished"
+                                     :percentage 100
+                                     :finished_time (util/time->int (util/now))}
+                 (= percentage -1) {:status "Failed"
+                                    :finished_time (util/time->int (util/now))}
+                 :else {:percentage percentage})]
+    (db-handler/update-task! task-id record)))
+
+(defn create-task!
+  [{:keys [name description payload plugin-name
+           plugin-type plugin-version response]
+    :as task}]
+  ;; TODO: response need to contain response-type field.
+  (let [updated-task (-> (assoc task :response (json/write-str (make-response response)))
+                         (assoc :payload (json/write-str payload))
+                         (dissoc :response-type))]
+    (apply db-handler/create-task! (apply concat updated-task))))

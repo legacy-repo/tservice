@@ -62,11 +62,11 @@
 
 (s/def ::plugin_type
   (st/spec
-   {:spec                #{"ReportPlugin" "StatPlugin" "DataPlugin"}
+   {:spec                #{"ReportPlugin" "StatPlugin" "DataPlugin" "ToolPlugin"}
     :type                :set
     :description         "Filter tasks by plugin_type field."
     :swagger/default     "ReportPlugin"
-    :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`"}))
+    :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`, `ToolPlugin`"}))
 
 (s/def ::plugin_version
   (st/spec

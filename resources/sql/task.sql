@@ -9,8 +9,8 @@
 ---------------------------------------------------------------------------------------------
 
 -- :name create-task!
--- :command :returning-execute
--- :result :affected
+-- :command :insert
+-- :result :raw
 /* :doc
   Args:
     | key                | type    | required  | description |
@@ -34,7 +34,6 @@
 */
 INSERT INTO tservice_task (id, name, description, payload, plugin_name, plugin_type, plugin_version, response, started_time, finished_time, status, percentage)
 VALUES (:id, :name, :description, :payload, :plugin_name, :plugin_type, :plugin_version, :response, :started_time, :finished_time, :status, :percentage)
-RETURNING id
 
 
 -- :name update-task!
@@ -87,7 +86,7 @@ WHERE id = :id
       Because the result will be ({:count 0}), when we use :raw to replace :one.
 */
 /* :require [tservice.db.sql-helper :as sql-helper] */
-SELECT COUNT(id)
+SELECT COUNT(id) as count
 FROM tservice_task
 /*~
 ; TODO: May be raise error, when the value of :query-map is unqualified.

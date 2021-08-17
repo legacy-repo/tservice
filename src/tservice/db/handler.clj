@@ -1,8 +1,10 @@
 (ns tservice.db.handler
   (:require
    [clojure.spec.alpha :as s]
+   [clojure.data.json :as json]
    [clojure.test :refer [function?]]
    [tservice.db.core :as db]
+   [tservice.config :refer [which-database]]
    [clojure.tools.logging :as log]
    [tservice.util :as util]))
 
@@ -29,11 +31,11 @@
 ;; Task Record
 (s/def ::name string?)
 (s/def ::description string?)
-(s/def ::payload map?)
+(s/def ::payload (s/or :map map? :string string?))
 (s/def ::plugin-name string?)
 (s/def ::plugin-version string?)
 (s/def ::plugin-type string?)
-(s/def ::response map?)
+(s/def ::response (s/or :map map? :string string?))
 (s/def ::started-time integer?)
 (s/def ::finished-time integer?)
 (s/def ::status string?)
@@ -124,8 +126,7 @@
   [func id record]
   {:pre [(s/valid? function? func)
          (s/valid? ::id id)
-         (s/valid? map? record)]
-   :post [(s/valid? (s/nilable map?) %)]}
+         (s/valid? map? record)]}
   (when record
     (func {:updates record
            :id      id})))
@@ -136,6 +137,15 @@
    search-entities
    {:query-func db/search-tasks
     :count-func db/count-tasks}))
+
+(defn convert-records
+  [results]
+  (assoc results
+         :data (map (fn [record]
+                      (-> record
+                          (assoc :response (json/read-str (:response record)))
+                          (assoc :payload (json/read-str (:payload record)))))
+                    (:data results))))
 
 (def search-task
   (partial
@@ -178,7 +188,8 @@
            status "Started"
            percentage 0}
       :as task}]
-  {:pre [(s/valid? ::task task)]}
+  {:pre [(s/valid? ::task task)]
+   :post [(s/valid? ::id %)]}
   (let [id (util/uuid)]
     (db/create-task! {:id id
                       :name name
@@ -191,4 +202,5 @@
                       :started_time started-time
                       :finished_time finished-time
                       :status status
-                      :percentage percentage})))
+                      :percentage percentage})
+    id))

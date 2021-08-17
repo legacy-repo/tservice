@@ -20,9 +20,10 @@
                           (let [query-map {:status      status
                                            :plugin_type plugin_type}]
                             (log/debug "page: " page, "page_size: " page_size, "query-map: " query-map)
-                            (ok (db-handler/search-tasks {:query-map query-map}
-                                                         page
-                                                         page_size))))}
+                            (ok (db-handler/convert-records
+                                 (db-handler/search-tasks {:query-map query-map}
+                                                          page
+                                                          page_size)))))}
 
      :post {:summary    "Create an task."
             :parameters {:body specs/task-body}

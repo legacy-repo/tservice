@@ -38,14 +38,15 @@
 
 #_:clj-kondo/ignore
 (defn which-database
-  [database-url]
-  {:pre [(s/valid? ::database-url database-url)]
-   :post [(s/valid? ::database %)]}
-  (let [database (re-find (re-matcher #"jdbc:sqlite|jdbc:postgresql|jdbc:h2"
-                                      database-url))]
-    (if database
-      (clj-str/replace database #"^jdbc:" "")
-      "sqlite")))
+  ([database-url]
+   {:pre [(s/valid? ::database-url database-url)]
+    :post [(s/valid? ::database %)]}
+   (let [database (re-find (re-matcher #"jdbc:sqlite|jdbc:postgresql|jdbc:h2"
+                                       database-url))]
+     (if database
+       (clj-str/replace database #"^jdbc:" "")
+       "sqlite")))
+  ([] (which-database (:database-url env))))
 
 (defn get-migration-config
   [env]
