@@ -88,7 +88,7 @@
   (for [^Path path (files/files-seq (plugins-dir))
         :when      (and (files/regular-file? path)
                         (files/readable? path)
-                        (str/ends-with? (.getFileName path) ".jar"))]
+                        (str/ends-with? (.getFileName path) "tservice-plugin.jar"))]
     path))
 
 (defn- load-local-plugin-manifest! [^Path path]
