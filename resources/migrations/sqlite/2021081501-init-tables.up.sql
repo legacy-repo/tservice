@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS tservice_entity_tag (
   id SERIAL NOT NULL,
   -- entity_id may contains task id etc.
   entity_id VARCHAR(32),
-  entity_type VARCHAR(32),
+  category VARCHAR(32),
   tag_id INT,
   PRIMARY KEY(id),
   CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tservice_tag(id)

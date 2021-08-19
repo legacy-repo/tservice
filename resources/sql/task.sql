@@ -122,7 +122,7 @@ FROM tservice_task
   (:query-map params) (sql-helper/where-clause (:query-map params) options)
   (:where-clause params) ":snip:where-clause")
 ~*/
-ORDER BY id
+ORDER BY started_time
 --~ (when (and (:limit params) (:offset params)) "LIMIT :limit OFFSET :offset")
 
 
@@ -159,10 +159,9 @@ ORDER BY id
   TODO:
     1. Maybe we need to support OR/LIKE/IS NOT/etc. expressions in WHERE clause.
     2. Maybe we need to use exact field name to replace *.
-    3. Maybe we need to add tservice_entity_tag.entity_type = "task" condition.
+    3. Maybe we need to add tservice_entity_tag.category = "task" condition.
 */
-/* :require [clojure.string :as string]
-            [hugsql.parameters :refer [identifier-param-quote]] */
+/* :require [tservice.db.sql-helper :as sql-helper] */
 SELECT  tservice_task.id,
         tservice_task.name,
         tservice_task.description,
@@ -181,13 +180,10 @@ FROM tservice_entity_tag
 JOIN tservice_task ON tservice_entity_tag.entity_id = tservice_task.id
 JOIN tservice_tag ON tservice_entity_tag.tag_id = tservice_tag.id
 /*~
-(when (:query-map params) 
- (str "WHERE "
-  (string/join " AND "
-    (for [[field _] (:query-map params)]
-      (str "tservice_task."
-        (identifier-param-quote (name field) options)
-          " = :v:query-map." (name field))))))
+; TODO: May be raise error, when the value of :query-map is unqualified.
+(cond
+  (:query-map params) (sql-helper/where-clause (:query-map params) options)
+  (:where-clause params) ":snip:where-clause")
 ~*/
 GROUP BY tservice_task.id
 ORDER BY tservice_task.id
