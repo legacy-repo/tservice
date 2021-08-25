@@ -79,7 +79,7 @@ RUN echo "**** Install dev packages ****" && \
     conda init bash && \
     \
     echo "**** Install dev dependencies by conda ****" && \
-    conda install conda-pack r-base r-renv && \
+    conda install conda-pack r-base=3.6.3 r-renv && \
     \
     echo "**** Install dev dependencies by pip ****" && \
     pip install --no-cache-dir virtualenv clone-env==0.5.4 && \
