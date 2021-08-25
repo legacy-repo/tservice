@@ -20,7 +20,6 @@
                  [ring-cors "0.1.13"]
                  [pdfboxing/pdfboxing "0.1.14"]
                  [clj-file-zip "0.1.0"]
-                 [expound "0.8.4"]
                  [funcool/struct "1.4.0"]
                  [luminus-transit "0.1.2"]
                  [luminus/ring-ttl-session "0.3.3"]
@@ -42,9 +41,6 @@
                                org.clojure/clojure]]
                  [clojurewerkz/quartzite "2.1.0"
                   :exclusions [org.clojure/clojure]]                                ; scheduling library
-                 [conman "0.8.4"
-                  :exclusions [org.clojure/java.jdbc
-                               org.clojure/clojure]]
                  [luminus-jetty "0.1.7"
                   :exclusions [clj-time joda-time org.clojure/clojure]]
                  [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
