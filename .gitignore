@@ -2,7 +2,7 @@
 /lib
 /classes
 /checkouts
-pom.xml
+pom.xml*
 dev-config.edn
 test-config.edn
 *.jar

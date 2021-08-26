@@ -1,4 +1,4 @@
-(defproject tservice "lein-git-inject/version"
+(defproject org.clojars.yjcyxky/tservice "lein-git-inject/version"
   ;; How to set project.clj? More details on https://github.com/technomancy/leiningen/blob/master/sample.project.clj
   :description "Make tool as a service."
   :url "https://github.com/clinico-omics/tservice"
