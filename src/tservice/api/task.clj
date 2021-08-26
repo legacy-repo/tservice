@@ -130,7 +130,7 @@
           (event-handler object)
           (log/warn (format "No such event %s. (Events: %s)" @report-plugin-events report-plugin-event))))
       (catch Throwable e
-        (log/warn (format "Failed to process ballgown2exp event. %s" (:topic report-plugin-event)) e)))))
+        (log/warn (format "Failed to process %s event. %s" (:topic report-plugin-event) e))))))
 
 (defn make-events-init
   "Generate event initializer."

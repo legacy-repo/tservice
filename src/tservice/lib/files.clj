@@ -169,6 +169,12 @@
     (create-dir-if-not-exists! (get-path path))
     path))
 
+(defn get-renv-cache-dir
+  []
+  (let [path (fs/join-paths (get-plugin-jar-dir) "cache")]
+    (create-dir-if-not-exists! (get-path path))
+    path))
+
 (defn get-path-variable
   []
   (let [external-bin (get-in env [:external-bin])
@@ -182,19 +188,30 @@
   [coll]
   (clj-str/join " " (map #(clj-str/join " " %) (into [] coll))))
 
+
+(defmacro with-sh-env
+  "Sets the directory for use with sh, see sh for details."
+  [dir env & forms]
+  `(binding [shell/*sh-dir* ~dir
+             shell/*sh-env* ~env]
+     ~@forms))
+
 (defn call-command!
-  ([cmd parameters-coll]
-   (shell/with-sh-env {:PATH   (get-path-variable)
-                       :LC_ALL "en_US.utf-8"
-                       :LANG   "en_US.utf-8"}
+  ([cmd parameters-coll workdir]
+   (with-sh-env workdir {:PATH   (get-path-variable)
+                         :LC_ALL "en_US.utf-8"
+                         :LANG   "en_US.utf-8"
+                         :HOME   (System/getenv "HOME")}
      (let [command ["bash" "-c" (format "%s %s" cmd (hashmap->parameters parameters-coll))]
            result (apply sh command)
            status (if (= (:exit result) 0) "Success" "Error")
            msg (str (:out result) "\n" (:err result))]
        {:status status
         :msg msg})))
+  ([cmd workdir]
+   (call-command! cmd [] workdir))
   ([cmd]
-   (call-command! cmd [])))
+   (call-command! cmd [] (System/getenv "PWD"))))
 
 (defn exist-bin?
   [name]
