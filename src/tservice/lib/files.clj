@@ -163,6 +163,12 @@
     (create-dir-if-not-exists! (get-path path))
     path))
 
+(defn get-plugin-jar-env-dir
+  [plugin-name]
+  (let [path (fs/join-paths (get-plugin-jar-dir) "envs" plugin-name)]
+    (create-dir-if-not-exists! (get-path path))
+    path))
+
 (defn get-path-variable
   []
   (let [external-bin (get-in env [:external-bin])

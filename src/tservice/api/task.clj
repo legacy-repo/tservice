@@ -11,12 +11,15 @@
             [tservice.api.schema.task :refer [get-response-schema]]))
 
 ;; -------------------------------- Re-export --------------------------------
-(def publish-event! events/publish-event!)
+(defn publish-event!
+  [topic event-item]
+  (events/publish-event! (str topic "-convert") event-item))
 
 ;; ----------------------------- HTTP Metadata -------------------------------
 (def ^:private response-identities
   {:data2files #{:log :files :total :response_type}
-   :data2report #{:log :report :response_type}})
+   :data2report #{:log :report :response_type}
+   :data2data #{:log :data}})
 
 (defn get-reponse-keys
   [response-type]
@@ -31,6 +34,13 @@
   {:log (get-relative-filepath (:log response) :filemode false)
    :report (get-relative-filepath (:report response) :filemode false)
    :response_type :data2report})
+
+(defmethod make-response :data2data
+  make-data2data-response
+  [response]
+  {:log (get-relative-filepath (:log response) :filemode false)
+   :data (:data response)
+   :response_type :data2data})
 
 (defmethod make-response :data2files
   make-data2report-response
@@ -54,7 +64,7 @@
                      {:status 201
                       :body (make-response (merge {:response-type (keyword response-type)} (handler body)))})}})
 
-;; Support :ReportPlugin, :DataPlugin, :StatPlugin, :ToolPlugin
+;; Support :ReportPlugin, :ToolPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
 
 (defmethod make-plugin-metadata :ReportPlugin
