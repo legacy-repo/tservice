@@ -8,11 +8,13 @@
             [clojure.tools.logging :as log]
             [tservice.util :as u]
             [tservice.lib.fs :as fs]
+            [me.raynes.fs :as f]
             [clojure.string :as clj-str]
             [tservice.config :refer [env]]
             [selmer.parser :as parser]
             [clojure.java.shell :as shell :refer [sh]])
   (:import java.io.FileNotFoundException
+           [java.util.jar JarFile JarEntry]
            java.net.URL
            [java.nio.file CopyOption Files FileSystem FileSystems LinkOption OpenOption Path Paths StandardCopyOption]
            java.nio.file.attribute.FileAttribute
@@ -191,27 +193,46 @@
 
 (defmacro with-sh-env
   "Sets the directory for use with sh, see sh for details."
+  {:added "0.5.6"}
   [dir env & forms]
   `(binding [shell/*sh-dir* ~dir
              shell/*sh-env* ~env]
      ~@forms))
 
+(defn chain-fn-coll
+  "Run the set of functions sequentially, exit the run 
+   when pred is false and return the existing result."
+  {:added "0.5.7"}
+  [fn-coll pred]
+  (loop [fn-seq (seq fn-coll)
+         results []]
+    (if fn-seq
+      (let [fn-item (first fn-seq)
+            result (fn-item)]
+        (if-not (pred result)
+          (concat results result)
+          (recur (next fn-seq) (concat results result))))
+      results)))
+
 (defn call-command!
-  ([cmd parameters-coll workdir]
-   (with-sh-env workdir {:PATH   (get-path-variable)
-                         :LC_ALL "en_US.utf-8"
-                         :LANG   "en_US.utf-8"
-                         :HOME   (System/getenv "HOME")}
+  ([cmd parameters-coll workdir env]
+   (with-sh-env workdir (merge {:PATH   (get-path-variable)
+                                :LC_ALL "en_US.utf-8"
+                                :LANG   "en_US.utf-8"
+                                :HOME   (System/getenv "HOME")}
+                               env)
      (let [command ["bash" "-c" (format "%s %s" cmd (hashmap->parameters parameters-coll))]
            result (apply sh command)
            status (if (= (:exit result) 0) "Success" "Error")
            msg (str (:out result) "\n" (:err result))]
        {:status status
         :msg msg})))
-  ([cmd workdir]
-   (call-command! cmd [] workdir))
+  ([cmd workdir env]
+   (call-command! cmd [] workdir env))
+  ([cmd env]
+   (call-command! cmd [] (System/getenv "PWD") env))
   ([cmd]
-   (call-command! cmd [] (System/getenv "PWD"))))
+   (call-command! cmd [] (System/getenv "PWD") {})))
 
 (defn exist-bin?
   [name]
@@ -305,6 +326,22 @@
           (= suffix "lzma") (cmd-fn "--lzma")
           (= suffix "zip") (call-command! (format "unzip -d %s %s" out-folder arch-name)))))
 
+(defn extract-dir-from-jar
+  "Takes the string path of a jar, a dir name inside that jar and a destination
+   dir, and copies the from dir to the to dir."
+  [^String jar-dir from to]
+  (let [jar (JarFile. jar-dir)]
+    (doseq [^JarEntry file (enumeration-seq (.entries jar))]
+      ;; Maybe `(.getName file)` is `from`.tar.gz
+      (when (.startsWith (.getName file) (str from "/"))
+        (let [f (f/file to (.getName file))]
+          (if (.isDirectory file)
+            (f/mkdir f)
+            (do (f/mkdirs (f/parent f))
+                (with-open [is (.getInputStream jar file)
+                            os (io/output-stream f)]
+                  (io/copy is os)))))))))
+
 (defn extract-env-from-archive
   "Extract the entire contents of a file from a archive (such as a JAR)."
   [^Path archive-path ^String path-component ^String dest-dir]
@@ -312,13 +349,16 @@
     (let [file-path (get-path-in-filesystem fs path-component)
           dest-path (fs/join-paths dest-dir path-component)
           env-name (first (clj-str/split path-component #"\."))
-          env-path (fs/join-paths dest-dir env-name)]
+          env-path (fs/join-paths dest-dir env-name)
+          is-archive? (re-matches #".*\.(gz|bz2|xz|zip)$" path-component)]
       (log/info (format "Extract env archive %s to %s" file-path env-path))
       (when (exists? file-path)
-        (if (fs/exists? env-path)
-          (log/info (u/format-color 'yellow
-                                    (format (long-str "If it have any problems when the plugin %s is loading"
-                                                      "you can remove the directory `%s` and retry.") env-name env-path)))
+        ;; TODO: Need to check? (fs/exists? env-path)
+        (log/info (u/format-color 'yellow
+                                  (format (long-str "If it have any problems when the plugin %s is loading"
+                                                    "you can remove the directory `%s` and retry.") env-name env-path)))
+        (if is-archive?
           (with-open [is (Files/newInputStream file-path (u/varargs OpenOption))]
             (io/copy is (io/file dest-path))
-            (decompress-archive dest-path dest-dir)))))))
+            (decompress-archive dest-path dest-dir))
+          (extract-dir-from-jar (.toString archive-path) path-component dest-dir))))))

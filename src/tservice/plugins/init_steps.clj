@@ -23,7 +23,7 @@
                                                   :ENV_NAME envname}))]
     (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
     (when jar-path
-      (files/extract-env-from-archive jar-path (str envname ".tar.gz") dest-dir)
+      (files/extract-env-from-archive jar-path envname dest-dir)
       (when post-unpack-cmd
         (log/info (u/format-color 'blue (format "Run post-unpack-cmd: %s" post-unpack-cmd)))
         (log/debug (files/call-command! post-unpack-cmd))))))

@@ -21,6 +21,9 @@
   | :title             | Report title. Printed as page header, used for filename if not otherwise specified. |
   | :force?            | Overwrite any existing reports |
   | :prepend-dirs?     | Prepend directory to sample names |
+  | :template          | default, other custom template    |
+  | :config            | Where is the config file          |
+  | :env               | An environemnt map for running multiqc, such as {:PATH (get-path-variable)} |
 
   Example:
   (multiqc 'XXX' 'YYY' {:filename       'ZZZ'
@@ -28,7 +31,7 @@
                         :title          ''
                         :force?         true
                         :prepend-dirs?  true})"
-  [analysis-dir outdir {:keys [dry-run? filename comment title force? prepend-dirs? template config]
+  [analysis-dir outdir {:keys [dry-run? filename comment title force? prepend-dirs? template config env]
                         :or   {dry-run?      false
                                force?        true
                                prepend-dirs? false
@@ -38,7 +41,7 @@
                                title         "iSEQ Analyzer Report"}}]
   (let [force-arg   (if force? "--force" "")
         dirs-arg    (if prepend-dirs? "--dirs" "")
-        config-arg  (if config (str "-c" config) "")
+        config-arg  (if config (str "-c " config) "")
         multiqc-command (filter #(> (count %) 0) ["multiqc"
                                                   force-arg dirs-arg config-arg
                                                   "--title" (format "'%s'" title)
@@ -49,5 +52,7 @@
                                                   analysis-dir])
         command (clj-str/join " " multiqc-command)]
     (if dry-run?
-      (log/debug command)
-      (call-command! command))))
+      (log/info command)
+      (if env
+        (call-command! command env)
+        (call-command! command)))))
