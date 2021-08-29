@@ -5,10 +5,8 @@
 
   :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.namespace "1.0.0"]
-                 [org.clojure/tools.cli "0.4.2" :exclusions [org.clojure/clojure]]
                  [org.clojure/core.async "0.4.500"
                   :exclusions [org.clojure/tools.reader]]
-                 [cheshire "5.10.0"]
                  [me.raynes/fs "1.4.6"]
                  [clojure.java-time "0.3.2"]
                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]               ; string output with ANSI color codes (for logging)
@@ -35,7 +33,6 @@
                  [org.xerial/sqlite-jdbc "3.34.0"]
                  [org.postgresql/postgresql "42.2.8"]
                  [cheshire "5.9.0" :exclusions [org.clojure/clojure]]
-                 [clojure.java-time "0.3.2"]
                  [conman "0.8.4"
                   :exclusions [org.clojure/java.jdbc
                                org.clojure/clojure]]
@@ -48,9 +45,6 @@
                  [org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.cli "1.0.194"]
                  [org.clojure/tools.logging "1.1.0"]
-                 [org.webjars.npm/bulma "0.8.2"]
-                 [org.webjars.npm/material-icons "0.3.1"]
-                 [org.webjars/webjars-locator "0.40"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]

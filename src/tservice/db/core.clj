@@ -3,11 +3,12 @@
    [cheshire.core :refer [generate-string parse-string]]
    [next.jdbc.date-time]
    [next.jdbc.prepare]
-   [next.jdbc.result-set]
+   [next.jdbc.result-set :as rs]
    [clojure.tools.logging :as log]
    [conman.core :as conman]
    [tservice.config :refer [env]]
-   [mount.core :refer [defstate]])
+   [mount.core :refer [defstate]]
+   [next.jdbc :as jdbc])
   (:import (org.postgresql.util PGobject)))
 
 (defstate ^:dynamic *db*
@@ -21,6 +22,12 @@
 (conman/bind-connection *db*
                         "sql/tag.sql"
                         "sql/task.sql")
+
+(defn get-db-version []
+  (let [db-version (jdbc/execute! (:datasource *db*)
+                                  ["SELECT id, applied, description FROM schema_migrations ORDER BY applied;"]
+                                  {:builder-fn rs/as-unqualified-maps})]
+    db-version))
 
 (defn pgobj->clj [^org.postgresql.util.PGobject pgobj]
   (let [type (.getType pgobj)

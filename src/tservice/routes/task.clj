@@ -7,7 +7,7 @@
 
 (def task
   [""
-   {:swagger {:tags ["Task Management"]}}
+   {:swagger {:tags ["Task"]}}
 
    ["/tasks"
     {:get  {:summary    "Get tasks."

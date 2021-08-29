@@ -18,7 +18,9 @@
             [tservice.middleware.formats :as formats]
             [tservice.plugin :as plugin]
             [tservice.plugin-jars :as plugin-jars]
-            [tservice.routes.task :as task-route]))
+            [tservice.routes.task :as task-route]
+            [tservice.version :as v]
+            [tservice.db.core :as db]))
 
 (defn service-routes []
   ["/api"
@@ -55,9 +57,10 @@
             {:url "/api/swagger.json"
              :config {:validator-url nil}})}]]
 
-   ["/ping"
+   ["/version"
     {:tags ["Utility"]
-     :get (constantly (ok {:message "pong"}))}]
+     :get (constantly (ok {:version (v/get-version "org.clojars.yjcyxky" "tservice")
+                           :db_version (db/get-db-version)}))}]
 
    ["/manifest"
     {:tags ["Utility"]
@@ -73,7 +76,7 @@
                                   :status 404}})))}}]
 
    ["/download"
-    {:tags ["File Management"]
+    {:tags ["File"]
      :get {:summary "Downloads a file"
            :parameters {:query specs/filelink-params-query}
            :handler (fn [{{{:keys [filelink]} :query} :parameters}]
@@ -83,7 +86,7 @@
                                  (io/input-stream))})}}]
 
    ["/upload"
-    {:tags ["File Management"]
+    {:tags ["File"]
      :post {:summary "Uploads File(s)."
             :parameters {:multipart {:files (s/or :file multipart/temp-file-part :files (s/coll-of multipart/temp-file-part))}}
             :handler (fn [{{{:keys [files]} :multipart} :parameters}]
