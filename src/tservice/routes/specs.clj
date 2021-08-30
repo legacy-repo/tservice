@@ -136,7 +136,7 @@
 (def task-params-query
   "A spec for the query parameters."
   (s/keys :req-un []
-          :opt-un [::page ::page_size ::plugin_type ::status]))
+          :opt-un [::page ::page_size ::plugin_type ::status ::plugin_name]))
 
 (def task-body
   "A spec for the task body."

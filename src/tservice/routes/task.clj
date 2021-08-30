@@ -16,9 +16,10 @@
                                      :page     pos-int?
                                      :page_size pos-int?
                                      :data     any?}}}
-            :handler    (fn [{{{:keys [page page_size status plugin_type]} :query} :parameters}]
+            :handler    (fn [{{{:keys [page page_size status plugin_type plugin_name]} :query} :parameters}]
                           (let [query-map {:status      status
-                                           :plugin_type plugin_type}]
+                                           :plugin_type plugin_type
+                                           :plugin_name plugin_name}]
                             (log/debug "page: " page, "page_size: " page_size, "query-map: " query-map)
                             (ok (db-handler/convert-records
                                  (db-handler/search-tasks {:query-map query-map}
