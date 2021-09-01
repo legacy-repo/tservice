@@ -7,7 +7,8 @@
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.plugin-proxy :as plugin-proxy]
             [tservice.util :as u]
-            [tservice.lib.files :as files]))
+            [tservice.lib.files :as files]
+            [clojure.string :as clj-str]))
 
 (defmulti ^:private do-init-step!
   "Perform a plugin init step. Steps are listed in `init:` in the plugin manifest; impls for each step are found below
@@ -15,18 +16,25 @@
   {:arglists '([m])}
   (comp keyword :step))
 
-(defmethod do-init-step! :unpack-env [{envname :envname postunpack :postunpack context :context}]
+(defmethod do-init-step! :unpack-env [{envname :envname fileext :fileext postunpack :postunpack context :context}]
   (let [{:keys [jar-path dest-dir]} context
+        ;; Compatible with v0.5.8 older interface (Only require envname, not fileext.)
+        envname-ext (clj-str/split envname #"\.")
+        fileext (or fileext (clj-str/join "." (rest envname-ext)))  ;; such as "tar.gz", "tgz" or ""
+        envname (first envname-ext)
         post-unpack-cmd (when postunpack
                           (files/render-template postunpack
                                                  {:ENV_DEST_DIR dest-dir
-                                                  :ENV_NAME envname}))]
-    (log/info (u/format-color 'blue (format "Unpack the conda environment into %s..." dest-dir)))
+                                                  :ENV_NAME envname}))
+        component (if (empty? fileext) envname (format "%s.%s" envname fileext))]
+    (log/info (u/format-color 'blue (format "Unpack the conda environment into %s/%s..."
+                                            dest-dir envname)))
     (when jar-path
-      (files/extract-env-from-archive jar-path envname dest-dir)
+      ;; Archive file or directory
+      (files/extract-env-from-archive jar-path component dest-dir)
       (when post-unpack-cmd
         (log/info (u/format-color 'blue (format "Run post-unpack-cmd: %s" post-unpack-cmd)))
-        (log/debug (files/call-command! post-unpack-cmd))))))
+        (log/info (files/call-command! post-unpack-cmd))))))
 
 (defmethod do-init-step! :load-namespace [{nmspace :namespace}]
   (log/info (u/format-color 'blue (format "Loading plugin namespace %s..." nmspace)))

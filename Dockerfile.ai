@@ -3,7 +3,7 @@
 ###################
 
 # Build currently doesn't work on > Java 11 (i18n utils are busted) so build on 8 until we fix this
-FROM adoptopenjdk/openjdk8:centos as builder
+FROM adoptopenjdk/openjdk8:latest as builder
 
 WORKDIR /app/source
 
@@ -15,7 +15,7 @@ ENV LC_CTYPE en_US.UTF-8
 # git:     ./bin/version
 # make:    backend building
 # gettext: translations
-RUN yum install -y coreutils bash git wget make gettext
+RUN apt-get update && apt-get install -y coreutils bash git wget make gettext
 
 # lein:    backend dependencies and building
 ADD ./bin/lein /usr/local/bin/lein
@@ -41,14 +41,15 @@ RUN bin/build
 # # STAGE 2: runner
 # ###################
 
-FROM adoptopenjdk/openjdk11:centos-jre as runner
+FROM adoptopenjdk/openjdk11:jre as runner
 
 LABEL org.opencontainers.image.source https://github.com/clinico-omics/tservice
 
 ARG CONDA_VERSION="4.7.12.1"
 ARG CONDA_MD5="81c773ff87af5cfac79ab862942ab6b3"
 ARG CONDA_DIR="/opt/conda"
-ENV PATH="$CONDA_DIR/bin:$PATH"
+# Add /app/bin into PATH variable for lein 
+ENV PATH="$PATH:$CONDA_DIR/bin:/app/bin"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
@@ -59,7 +60,8 @@ WORKDIR /app
 # You can uncomment the following line when you are in Chinese Mainland
 # COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
-    yum install -y which bash wget git libgxps && \
+    apt-get update && \
+    apt-get install -y bash wget git && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
@@ -68,32 +70,32 @@ RUN echo "**** Install dev packages ****" && \
     \
     echo "**** Install Miniconda ****" && \
     bash miniconda.sh -f -b -p "$CONDA_DIR" && \
-    echo "export PATH=$PATH:$CONDA_DIR/bin" > /etc/profile.d/conda.sh && \
     \
     echo "**** Setup Miniconda ****" && \
     conda config --set auto_update_conda False && \
     conda config --add channels conda-forge && \
     conda config --add channels bioconda && \
     \
-    echo "**** Initialize conda ****" && \
-    conda init bash && \
-    \
     echo "**** Install dev dependencies by conda ****" && \
-    conda install conda-pack r-base=3.6.3 r-renv && \
+    conda install conda-pack r-base=3.6.3 r-renv gnupg -y && \
     \
     echo "**** Install dev dependencies by pip ****" && \
     pip install --no-cache-dir virtualenv clone-env==0.5.4 && \
     \
     echo "**** Add Nvidia Runtime ****" && \
     distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && \
-    curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.repo | tee /etc/yum.repos.d/nvidia-docker.repo && \
-    yum install nvidia-container-toolkit -y && \
+    curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add - && \
+    curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list && \
+    apt-get update && apt-get install nvidia-container-toolkit -y && \
+    \
+    echo "**** Image ****" && \
+    apt-get install libvips-dev libvips-tools openslide-tools python3-openslide -y && \
     \
     echo "**** Cleanup ****" && \
     rm -f miniconda.sh && \
     conda clean --all --force-pkgs-dirs --yes && \
     find "$CONDA_DIR" -follow -type f \( -iname '*.a' -o -iname '*.pyc' -o -iname '*.js.map' \) -delete && \
-    yum clean all && \
+    apt-get clean && \
     \
     echo "**** Finalize ****" && \
     mkdir -p "$CONDA_DIR/locks" && \

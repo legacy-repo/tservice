@@ -48,7 +48,7 @@ LABEL org.opencontainers.image.source https://github.com/clinico-omics/tservice
 ARG CONDA_VERSION="4.7.12.1"
 ARG CONDA_MD5="81c773ff87af5cfac79ab862942ab6b3"
 ARG CONDA_DIR="/opt/conda"
-ENV PATH="$CONDA_DIR/bin:$PATH"
+ENV PATH="$PATH:$CONDA_DIR/bin:/app/bin"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
@@ -68,15 +68,11 @@ RUN echo "**** Install dev packages ****" && \
     \
     echo "**** Install Miniconda ****" && \
     bash miniconda.sh -f -b -p "$CONDA_DIR" && \
-    echo "export PATH=$PATH:$CONDA_DIR/bin" > /etc/profile.d/conda.sh && \
     \
     echo "**** Setup Miniconda ****" && \
     conda config --set auto_update_conda False && \
     conda config --add channels conda-forge && \
     conda config --add channels bioconda && \
-    \
-    echo "**** Initialize conda ****" && \
-    conda init bash && \
     \
     echo "**** Install dev dependencies by conda ****" && \
     conda install conda-pack r-base=3.6.3 r-renv && \
