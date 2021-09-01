@@ -225,6 +225,7 @@
            result (apply sh command)
            status (if (= (:exit result) 0) "Success" "Error")
            msg (str (:out result) "\n" (:err result))]
+       (log/info (format "Running the Command: %s (Environment: %s; Working Directory: %s)" command env workdir))
        {:status status
         :msg msg})))
   ([cmd workdir env]
@@ -248,7 +249,7 @@
     (if (re-matches #"^file:\/\/\/.*" filepath)
     ; Absolute path with file://
       (clj-str/replace filepath #"^file:\/\/" "")
-      (fs/join-paths (get-workdir) (clj-str/replace filepath #"^file:\/\/" "")))
+      (fs/join-paths (get-tservice-workdir) (clj-str/replace filepath #"^file:\/\/" "")))
     filepath))
 
 (defn get-relative-filepath

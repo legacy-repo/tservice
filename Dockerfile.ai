@@ -77,19 +77,16 @@ RUN echo "**** Install dev packages ****" && \
     conda config --add channels bioconda && \
     \
     echo "**** Install dev dependencies by conda ****" && \
-    conda install conda-pack r-base=3.6.3 r-renv gnupg -y && \
+    conda install gnupg -y && \
     \
     echo "**** Install dev dependencies by pip ****" && \
     pip install --no-cache-dir virtualenv clone-env==0.5.4 && \
     \
     echo "**** Add Nvidia Runtime ****" && \
-    distribution=$(. /etc/os-release;echo $ID$VERSION_ID) && \
-    curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | apt-key add - && \
-    curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | tee /etc/apt/sources.list.d/nvidia-docker.list && \
-    apt-get update && apt-get install nvidia-container-toolkit -y && \
+    apt-get update && apt-get -y install nvidia-cuda-toolkit && \
     \
     echo "**** Image ****" && \
-    apt-get install libvips-dev libvips-tools openslide-tools python3-openslide -y && \
+    apt-get install libblas-dev liblapack-dev libgl1-mesa-glx libvips-dev libvips-tools openslide-tools python3-openslide -y && \
     \
     echo "**** Cleanup ****" && \
     rm -f miniconda.sh && \
