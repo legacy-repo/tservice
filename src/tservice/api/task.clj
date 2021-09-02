@@ -163,7 +163,7 @@
     (db-handler/update-task! task-id record)))
 
 (defn create-task!
-  [{:keys [name description payload plugin-name
+  [{:keys [id name description payload plugin-name
            plugin-type plugin-version response]
     :as task}]
   ;; TODO: response need to contain response-type field.

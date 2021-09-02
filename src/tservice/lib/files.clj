@@ -210,8 +210,8 @@
       (let [fn-item (first fn-seq)
             result (fn-item)]
         (if-not (pred result)
-          (concat results result)
-          (recur (next fn-seq) (concat results result))))
+          (conj results result)
+          (recur (next fn-seq) (conj results result))))
       results)))
 
 (defn call-command!
@@ -225,7 +225,9 @@
            result (apply sh command)
            status (if (= (:exit result) 0) "Success" "Error")
            msg (str (:out result) "\n" (:err result))]
-       (log/info (format "Running the Command: %s (Environment: %s; Working Directory: %s)" command env workdir))
+       (log/info (format "Running the Command: %s (Environment: %s; Working Directory: %s; Status: %s; Msg: %s)" 
+                         command env workdir
+                         status msg))
        {:status status
         :msg msg})))
   ([cmd workdir env]

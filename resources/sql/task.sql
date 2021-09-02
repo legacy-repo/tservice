@@ -122,7 +122,7 @@ FROM tservice_task
   (:query-map params) (sql-helper/where-clause (:query-map params) options)
   (:where-clause params) ":snip:where-clause")
 ~*/
-ORDER BY started_time
+ORDER BY started_time DESC
 --~ (when (and (:limit params) (:offset params)) "LIMIT :limit OFFSET :offset")
 
 

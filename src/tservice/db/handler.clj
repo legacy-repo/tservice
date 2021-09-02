@@ -169,7 +169,8 @@
   (db/delete-task! {:id id}))
 
 (defn create-task!
-  [& {:keys [name
+  [& {:keys [id
+             name
              description
              payload
              plugin-name
@@ -180,7 +181,8 @@
              finished-time
              status
              percentage]
-      :or {description ""
+      :or {id (util/uuid)
+           description ""
            payload {}
            response {}
            started-time (util/time->int (util/now))
@@ -190,17 +192,16 @@
       :as task}]
   {:pre [(s/valid? ::task task)]
    :post [(s/valid? ::id %)]}
-  (let [id (util/uuid)]
-    (db/create-task! {:id id
-                      :name name
-                      :description description
-                      :payload payload
-                      :plugin_name plugin-name
-                      :plugin_version plugin-version
-                      :plugin_type plugin-type
-                      :response response
-                      :started_time started-time
-                      :finished_time finished-time
-                      :status status
-                      :percentage percentage})
-    id))
+  (db/create-task! {:id id
+                    :name name
+                    :description description
+                    :payload payload
+                    :plugin_name plugin-name
+                    :plugin_version plugin-version
+                    :plugin_type plugin-type
+                    :response response
+                    :started_time started-time
+                    :finished_time finished-time
+                    :status status
+                    :percentage percentage})
+  id)
