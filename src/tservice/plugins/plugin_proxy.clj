@@ -32,7 +32,9 @@
   [^String entrypoint plugin-info]
   (let [m (load-plugin-metadata entrypoint)
         metadata {:route (:route m)
+                  :routes (:routes m)
                   :manifest (or (:manifest m) plugin-info)}]
-    (if metadata
-      (setup-plugins-metadata (cons metadata @plugins-metadata))
-      (log/warn (format "%s is not a valid plugin: not found metadata" entrypoint)))))
+    (log/debug (format "%s's metadata %s" entrypoint m))
+    (if (and (nil? (:route metadata)) (nil? (:routes metadata)))
+      (log/warn (format "%s is not a valid plugin, not found metadata (%s)" entrypoint m))
+      (setup-plugins-metadata (cons metadata @plugins-metadata)))))
