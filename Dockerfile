@@ -10,7 +10,7 @@ WORKDIR /app/source
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
 
-COPY sources.list /etc/apt/sources.list
+COPY build/sources.list /etc/apt/sources.list
 
 # bash:    various shell scripts
 # wget:    installing lein
@@ -54,17 +54,23 @@ ENV LC_CTYPE en_US.UTF-8
 
 WORKDIR /app
 
-COPY sources.list /etc/apt/sources.list
+COPY build/sources.list /etc/apt/sources.list
 
 # Install conda
 # You can uncomment the following line when you are in Chinese Mainland
 # COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
     apt-get update && \
-    apt-get install -y bash wget git r-base python3 python3-dev python3-pip && \
+    apt-get install -y bash wget git curl r-base python3 python3-pip && \
     \
-    echo "**** Install dev dependencies by pip ****" && \
+    echo "*** Install common development dependencies" && \
+    apt-get install libmysqlclient-dev python3-dev libxml2-dev libcurl4-openssl-dev libssl-dev && \
+    \
+    echo "**** Install python development dependencies ****" && \
     pip3 install --no-cache-dir virtualenv clone-env==0.5.4 && \
+    \
+    echo "**** Install R development dependencies ****" && \
+    Rscript -e 'install.packages("renv")' && \
     \
     echo "**** Cleanup ****" && \
     apt-get clean

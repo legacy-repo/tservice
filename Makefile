@@ -9,7 +9,7 @@ dev-db: clean-dev-db
 	@docker run --name tservice -e POSTGRES_PASSWORD=password -e POSTGRES_USER=postgres -p 5432:5432 -d postgres:10.0
 	@sleep 3
 	@echo "Create database: tservice_dev"
-	@bash create-db.sh tservice_dev 5432
+	@bash build/create-db.sh tservice_dev 5432
 	@echo "Migrate database..."
 	@bash lein run migrate
 
@@ -18,7 +18,7 @@ test-db:
 	@docker run --name tservice-test -e POSTGRES_PASSWORD=password -e POSTGRES_USER=postgres -p 54320:5432 -d postgres:10.0
 	@sleep 3
 	@echo "Create database: datains_test"
-	@bash create-db.sh datains_test 54320
+	@bash build/create-db.sh datains_test 54320
 
 clean-test-db:
 	@printf "Stop "
@@ -39,4 +39,4 @@ build-jar:
 
 build-docker:
 	@echo "Building docker image"
-	@bash build-docker.sh
+	@bash build/build-docker.sh

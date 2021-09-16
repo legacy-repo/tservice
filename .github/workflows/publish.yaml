@@ -23,7 +23,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build & push docker image
-        run: ./build-docker.sh
+        run: ./build/build-docker.sh
         shell: bash
   build_doc:
     name: Build docs & push to gh-pages branch

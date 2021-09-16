@@ -10,7 +10,7 @@ WORKDIR /app/source
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
 
-COPY sources.list /etc/apt/sources.list
+COPY build/sources.list /etc/apt/sources.list
 
 # bash:    various shell scripts
 # wget:    installing lein
@@ -58,7 +58,7 @@ ENV LC_CTYPE en_US.UTF-8
 
 WORKDIR /app
 
-COPY sources.list /etc/apt/sources.list
+COPY build/sources.list /etc/apt/sources.list
 
 # Install conda
 # You can uncomment the following line when you are in Chinese Mainland
