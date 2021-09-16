@@ -47,10 +47,7 @@ FROM adoptopenjdk/openjdk11:jre as runner
 
 LABEL org.opencontainers.image.source https://github.com/clinico-omics/tservice
 
-ARG CONDA_VERSION="4.7.12.1"
-ARG CONDA_MD5="81c773ff87af5cfac79ab862942ab6b3"
-ARG CONDA_DIR="/opt/conda"
-ENV PATH="$PATH:$CONDA_DIR/bin:/app/bin"
+ENV PATH="$PATH:/app/bin"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV FC_LANG en-US
 ENV LC_CTYPE en_US.UTF-8
@@ -64,36 +61,14 @@ COPY sources.list /etc/apt/sources.list
 # COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
     apt-get update && \
-    apt-get install -y bash wget git && \
-    \
-    echo "**** Get Miniconda ****" && \
-    mkdir -p "$CONDA_DIR" && \
-    wget "https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh" -O miniconda.sh && \
-    echo "$CONDA_MD5  miniconda.sh" | md5sum -c && \
-    \
-    echo "**** Install Miniconda ****" && \
-    bash miniconda.sh -f -b -p "$CONDA_DIR" && \
-    \
-    echo "**** Setup Miniconda ****" && \
-    conda config --set auto_update_conda False && \
-    conda config --add channels conda-forge && \
-    conda config --add channels bioconda && \
-    \
-    echo "**** Install dev dependencies by conda ****" && \
-    conda install conda-pack r-base=3.6.3 r-renv && \
+    apt-get install -y bash wget git r-base python3 python3-dev python3-pip && \
     \
     echo "**** Install dev dependencies by pip ****" && \
-    pip install --no-cache-dir virtualenv clone-env==0.5.4 && \
+    pip3 install --no-cache-dir virtualenv clone-env==0.5.4 && \
     \
     echo "**** Cleanup ****" && \
-    rm -f miniconda.sh && \
-    conda clean --all --force-pkgs-dirs --yes && \
-    find "$CONDA_DIR" -follow -type f \( -iname '*.a' -o -iname '*.pyc' -o -iname '*.js.map' \) -delete && \
-    apt-get clean && \
-    \
-    echo "**** Finalize ****" && \
-    mkdir -p "$CONDA_DIR/locks" && \
-    chmod 777 "$CONDA_DIR/locks"
+    apt-get clean
+
 
 # Add tservice script and uberjar
 RUN mkdir -p bin target/uberjar
