@@ -64,7 +64,7 @@ COPY sources.list /etc/apt/sources.list
 # COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
     apt-get update && \
-    apt-get install -y which bash wget git libgxps && \
+    apt-get install -y bash wget git && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
