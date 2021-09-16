@@ -3,7 +3,7 @@
 ###################
 
 # Build currently doesn't work on > Java 11 (i18n utils are busted) so build on 8 until we fix this
-FROM adoptopenjdk/openjdk8:centos as builder
+FROM adoptopenjdk/openjdk8:latest as builder
 
 WORKDIR /app/source
 
@@ -15,7 +15,7 @@ ENV LC_CTYPE en_US.UTF-8
 # git:     ./bin/version
 # make:    backend building
 # gettext: translations
-RUN yum install -y coreutils bash git wget make gettext
+RUN apt-get update && apt-get install -y coreutils bash git wget make gettext
 
 # lein:    backend dependencies and building
 ADD ./bin/lein /usr/local/bin/lein
@@ -41,7 +41,7 @@ RUN bin/build
 # # STAGE 2: runner
 # ###################
 
-FROM adoptopenjdk/openjdk11:centos-jre as runner
+FROM adoptopenjdk/openjdk11:jre as runner
 
 LABEL org.opencontainers.image.source https://github.com/clinico-omics/tservice
 
@@ -59,7 +59,8 @@ WORKDIR /app
 # You can uncomment the following line when you are in Chinese Mainland
 # COPY condarc /root/.condarc
 RUN echo "**** Install dev packages ****" && \
-    yum install -y which bash wget git libgxps && \
+    apt-get update && \
+    apt-get install -y which bash wget git libgxps && \
     \
     echo "**** Get Miniconda ****" && \
     mkdir -p "$CONDA_DIR" && \
@@ -84,7 +85,7 @@ RUN echo "**** Install dev packages ****" && \
     rm -f miniconda.sh && \
     conda clean --all --force-pkgs-dirs --yes && \
     find "$CONDA_DIR" -follow -type f \( -iname '*.a' -o -iname '*.pyc' -o -iname '*.js.map' \) -delete && \
-    yum clean all && \
+    apt-get clean && \
     \
     echo "**** Finalize ****" && \
     mkdir -p "$CONDA_DIR/locks" && \
