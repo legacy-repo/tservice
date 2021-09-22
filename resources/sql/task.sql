@@ -19,6 +19,7 @@
     | :name              | string  | true      | The task name, required, [a-zA-Z0-9]+.
     | :description       | string  | false     | A description of the task.
     | :payload           | json    | false     | The payload of the related task.
+    | :owner             | string  | true      | The owner of the related task.
     | :plugin_name       | string  | true      | Which plugin for generating task.
     | :plugin_type       | string  | true      | ReportPlugin, StatPlugin, DataPlugin etc.
     | :plugin_version    | string  | true      | Which plugin version.
@@ -32,8 +33,8 @@
   Examples: 
     Clojure: (create-task! {})
 */
-INSERT INTO tservice_task (id, name, description, payload, plugin_name, plugin_type, plugin_version, response, started_time, finished_time, status, percentage)
-VALUES (:id, :name, :description, :payload, :plugin_name, :plugin_type, :plugin_version, :response, :started_time, :finished_time, :status, :percentage)
+INSERT INTO tservice_task (id, name, description, payload, owner, plugin_name, plugin_type, plugin_version, response, started_time, finished_time, status, percentage)
+VALUES (:id, :name, :description, :payload, :owner, :plugin_name, :plugin_type, :plugin_version, :response, :started_time, :finished_time, :status, :percentage)
 
 
 -- :name update-task!
@@ -141,6 +142,7 @@ ORDER BY started_time DESC
               tservice_task.name,
               tservice_task.description,
               tservice_task.payload,
+              tservice_task.owner,
               tservice_task.plugin_name,
               tservice_task.plugin_version,
               tservice_task.plugin_type,
@@ -166,6 +168,7 @@ SELECT  tservice_task.id,
         tservice_task.name,
         tservice_task.description,
         tservice_task.payload,
+        tservice_task.owner,
         tservice_task.plugin_name,
         tservice_task.plugin_version,
         tservice_task.plugin_type,

@@ -3,6 +3,9 @@
    [ring.util.http-response :refer [ok created no-content]]
    [tservice.db.handler :as db-handler]
    [tservice.routes.specs :as specs]
+   [clojure.string :as clj-str]
+   [honeysql.core :as sql]
+   [clojure.spec.alpha :as s]
    [clojure.tools.logging :as log]))
 
 (def task
@@ -16,15 +19,26 @@
                                      :page     pos-int?
                                      :page_size pos-int?
                                      :data     any?}}}
-            :handler    (fn [{{{:keys [page page_size status plugin_type plugin_name]} :query} :parameters}]
+            :handler    (fn [{{{:keys [page page_size owner status plugin_type plugin_name]} :query} :parameters
+                              {:as headers} :headers}]
                           (let [query-map {:status      status
+                                           :owner       owner
                                            :plugin_type plugin_type
-                                           :plugin_name plugin_name}]
-                            (log/debug "page: " page, "page_size: " page_size, "query-map: " query-map)
+                                           :plugin_name plugin_name}
+                                auth-users (get headers "x-auth-users")
+                                owners (if auth-users (clj-str/split auth-users #",") nil)
+                                where-clause (db-handler/make-where-clause "tservice-task"
+                                                                           query-map
+                                                                           [:in :tservice-task.owner owners])
+                                query-clause (if owners
+                                               {:where-clause
+                                                (sql/format {:where where-clause})}
+                                               {:query-map query-map})]
+                            (log/info "page: " page, "page_size: " page_size, "query-map: " query-clause)
                             (ok (db-handler/convert-records
-                                 (db-handler/search-tasks {:query-map query-map}
-                                                          page
-                                                          page_size)))))}
+                                 (db-handler/search-tasks query-clause
+                                                          (or page 1)
+                                                          (or page_size 10))))))}
 
      :post {:summary    "Create an task."
             :parameters {:body specs/task-body}

@@ -11,7 +11,7 @@
 ;; -------------------------------- Spec --------------------------------
 ;; Where Map
 (s/def ::query-map map?)
-(s/def ::where-clause coll?)
+(s/def ::where-clause any?)
 (s/def ::where-map (s/keys :opt-un [::query-map ::where-clause]))
 
 ;; Function Map
@@ -52,12 +52,21 @@
       `filter-query-map` need to return nil when query-map is nil
   "
   [query-map]
-  {:pre [(s/valid? ::where-map query-map)]
-   :post [(or (s/valid? ::where-map %) (s/valid? nil? %))]}
+  {:pre [(or (s/valid? map? query-map) (s/valid? nil? query-map))]
+   :post [(or (s/valid? map? %) (s/valid? nil? %))]}
   (let [query-map (into {} (filter (comp some? val) query-map))]
     (if (empty? query-map)
       nil
       query-map)))
+
+(defn make-where-clause
+  [table-name query-map & more]
+  (let [clauses (map (fn [key] [:is (keyword (str table-name "." (name key))) (get query-map key)])
+                     (keys (filter-query-map query-map)))
+        all (concat clauses more)]
+    (if (> (count all) 1)
+      (cons :and all)
+      (first all))))
 
 (defn- page->offset
   "Tranform page to offset."
@@ -107,7 +116,7 @@
          metadata {:total     (or (:count ((:count-func func-map) params)) 0)
                    :page      page
                    :page_size page-size}]
-     (log/info "Query db by: " params, (merge metadata {:data ((:query-func func-map) params)}))
+     (log/debug "Query db by: " params, (merge metadata {:data ((:query-func func-map) params)}))
      (merge metadata {:data ((:query-func func-map) params)}))))
 
 (defn- search-entity
@@ -173,6 +182,7 @@
              name
              description
              payload
+             owner
              plugin-name
              plugin-version
              plugin-type
@@ -196,6 +206,7 @@
                     :name name
                     :description description
                     :payload payload
+                    :owner owner
                     :plugin_name plugin-name
                     :plugin_version plugin-version
                     :plugin_type plugin-type

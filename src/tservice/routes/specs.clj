@@ -52,6 +52,14 @@
     :swagger/default     ""
     :reason              "Not a valid payload"}))
 
+(s/def ::owner
+  (st/spec
+   {:spec                #(re-find #"^[a-zA-Z_][a-zA-Z0-9_]{4,31}$" %)
+    :type                :string
+    :description         "Owner name that you want to query."
+    :swagger/default     "huangyechao"
+    :reason              "Not a valid owner name, regex: '^[a-zA-Z_][a-zA-Z0-9_]{4,31}$'."}))
+
 (s/def ::plugin_name
   (st/spec
    {:spec                string?
@@ -136,9 +144,9 @@
 (def task-params-query
   "A spec for the query parameters."
   (s/keys :req-un []
-          :opt-un [::page ::page_size ::plugin_type ::status ::plugin_name]))
+          :opt-un [::page ::page_size ::owner ::plugin_type ::status ::plugin_name]))
 
 (def task-body
   "A spec for the task body."
   (s/keys :req-un [::name ::plugin_name ::plugin_type ::plugin_version]
-          :opt-un [::description ::payload ::response ::started_time ::finished_time ::status ::percentage]))
+          :opt-un [::description ::payload ::owner ::response ::started_time ::finished_time ::status ::percentage]))

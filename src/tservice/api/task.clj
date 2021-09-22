@@ -5,6 +5,7 @@
             [tservice.events :as events]
             [tservice.config :refer [which-database]]
             [clojure.tools.logging :as log]
+            [clojure.string :as clj-str]
             [clojure.core.async :as async]
             [spec-tools.json-schema :as json-schema]
             [tservice.lib.files :refer [get-relative-filepath]]
@@ -60,9 +61,12 @@
    :post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type name))
           :parameters {:body params-schema}
           :responses {201 {:body response-schema}}
-          :handler (fn [{{:keys [body]} :parameters}]
-                     {:status 201
-                      :body (make-response (merge {:response-type (keyword response-type)} (handler body)))})}})
+          :handler (fn [{{:keys [body]} :parameters
+                         {:as headers} :headers}]
+                     (let [auth-users (get headers "x-auth-users")
+                           owner (first (clj-str/split auth-users #","))]
+                       {:status 201
+                        :body (make-response (merge {:response-type (keyword response-type)} (handler (merge body {:owner owner}))))}))}})
 
 ;; Support :ReportPlugin, :ToolPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
@@ -164,9 +168,10 @@
 
 (defn create-task!
   [{:keys [id name description payload plugin-name
-           plugin-type plugin-version response]
+           plugin-type plugin-version response owner]
     :as task}]
   ;; TODO: response need to contain response-type field.
+  (println "create-task!: " task)
   (let [updated-task (-> (assoc task :response (json/write-str (make-response response)))
                          (assoc :payload (json/write-str payload))
                          (dissoc :response-type))]
