@@ -54,7 +54,7 @@
 
 (s/def ::owner
   (st/spec
-   {:spec                #(re-find #"^[a-zA-Z_][a-zA-Z0-9_]{4,31}$" %)
+   {:spec                #(re-find #"^.*$" %)
     :type                :string
     :description         "Owner name that you want to query."
     :swagger/default     "huangyechao"
