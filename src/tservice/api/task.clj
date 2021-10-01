@@ -67,9 +67,12 @@
                      (let [auth-users (get headers "x-auth-users")
                            owner (when auth-users (first (clj-str/split auth-users #",")))]
                        {:status 201
-                        :body (make-response (merge {:response-type (keyword response-type)}
-                                                    (handler (merge body {:owner owner
-                                                                          :plugin-env (get-plugin-env name)}))))}))}})
+                        :body (make-response
+                               (merge {:response-type (keyword response-type)}
+                                      (handler (merge body
+                                                      {:owner owner
+                                                       :plugin-env (merge (get-plugin-env name)
+                                                                          {:plugin-type plugin-type})}))))}))}})
 
 ;; Support :ReportPlugin, :ToolPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
