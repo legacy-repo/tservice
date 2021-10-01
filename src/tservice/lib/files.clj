@@ -165,6 +165,10 @@
     (create-dir-if-not-exists! (get-path path))
     path))
 
+(defn make-plugin-subpath
+  [dir-name plugin-name]
+  (fs/join-paths (get-plugin-jar-dir) dir-name plugin-name))
+
 (defn get-plugin-jar-env-dir
   [plugin-name]
   (let [path (fs/join-paths (get-plugin-jar-dir) "envs" plugin-name)]
@@ -285,11 +289,13 @@
    "
   [template env-context]
   (log/debug (format "Render Template with Environment Context: %s" env-context))
-  (let [{:keys [ENV_DEST_DIR ENV_NAME]} env-context
+  (let [{:keys [ENV_DEST_DIR ENV_NAME CONFIG_DIR DATA_DIR]} env-context
         env-dest-dir (fs/join-paths ENV_DEST_DIR ENV_NAME)
         env-name ENV_NAME
         clone-env-bin (which "clone-env")]
     (parser/render template {:ENV_DEST_DIR env-dest-dir
+                             :CONFIG_DIR CONFIG_DIR
+                             :DATA_DIR DATA_DIR
                              :ENV_NAME env-name
                              :CLONE_ENV_BIN clone-env-bin})))
 

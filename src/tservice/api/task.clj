@@ -65,7 +65,7 @@
           :handler (fn [{{:keys [body]} :parameters
                          {:as headers} :headers}]
                      (let [auth-users (get headers "x-auth-users")
-                           owner (first (clj-str/split auth-users #","))]
+                           owner (when auth-users (first (clj-str/split auth-users #",")))]
                        {:status 201
                         :body (make-response (merge {:response-type (keyword response-type)}
                                                     (handler (merge body {:owner owner

@@ -2,8 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [tservice.lib.fs :as fs]
-            [tservice.lib.files :as files :refer [get-plugin-jar-dir]]
+            [tservice.lib.files :as files :refer [get-plugin-jar-dir make-plugin-subpath]]
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.initialize :as initialize]
             [tservice.plugins.plugin-proxy :refer [get-plugins-metadata add-plugin-env]]
@@ -65,10 +64,6 @@
   (some-> (files/slurp-file-from-archive jar-path "tservice-plugin.yaml")
           yaml/parse-string))
 
-(defn make-plugin-subpath
-  [dir-name plugin-name]
-  (fs/join-paths (get-plugin-jar-dir) dir-name plugin-name))
-
 (defn- init-plugin-with-info!
   "Initiaize plugin using parsed info from a plugin maifest. Returns truthy if plugin was successfully initialized;
   falsey otherwise."
@@ -79,7 +74,6 @@
                     {:plugin-name plugin-name
                      :plugin-version (:version (:info info))
                      :plugin-info info
-                     :cache-dir (make-plugin-subpath "cache" plugin-name)
                      :data-dir (make-plugin-subpath "data" plugin-name)
                      :env-dir (make-plugin-subpath "envs" plugin-name)
                      :jar-path (:jar-path info)

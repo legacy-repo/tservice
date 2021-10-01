@@ -170,9 +170,15 @@ plugin:
   display-name: Quartet DNA-Seq Report
   lazy-load: false
 init:
-  # Unpack environment file to the directory, repository/envs/quartet-dnaseq-report
+  # Unpack any files to the specified directory, such as ENV/CONFIG/DATA directory.
+  # You can write the unpack-env step more than once.
   - step: unpack-env
+    # envname means the name of the file/directory in the resources directory, the file extension can be "tar.gz", "tgz" or "". When the envtype is environment, you need to keep envname same with the plugin name.
     envname: quartet-dnaseq-report
+    # envtype can be the one of 'environment', 'configuration', 'data'
+    envtype: environment
+    # post-unpack-cmd can use template variables, such as {{ ENV_DEST_DIR }}, {{ CONFIG_DIR }}, {{ DATA_DIR }}
+    post-unpack-cmd: 'FIXME: you can write any bash command'
   - step: load-namespace
     namespace: tservice.plugins.quartet-dnaseq-report
   - step: register-plugin

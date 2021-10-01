@@ -16,22 +16,32 @@
   {:arglists '([m])}
   (comp keyword :step))
 
-(defmethod do-init-step! :unpack-env [{envname :envname fileext :fileext postunpack :postunpack context :context}]
-  (let [{:keys [jar-path dest-dir]} context
+(defmethod do-init-step! :unpack-env [{envname :envname envtype :envtype fileext :fileext postunpack :postunpack context :context}]
+  (let [{:keys [jar-path env-dest-dir config-dir data-dir]} context
         ;; Compatible with v0.5.8 older interface (Only require envname, not fileext.)
         envname-ext (clj-str/split envname #"\.")
         fileext (or fileext (clj-str/join "." (rest envname-ext)))  ;; such as "tar.gz", "tgz" or ""
         envname (first envname-ext)
         post-unpack-cmd (when postunpack
                           (files/render-template postunpack
-                                                 {:ENV_DEST_DIR dest-dir
+                                                 {:ENV_DEST_DIR env-dest-dir
+                                                  :CONFIG_DIR config-dir
+                                                  :DATA_DIR data-dir
                                                   :ENV_NAME envname}))
         component (if (empty? fileext) envname (format "%s.%s" envname fileext))]
     (log/info (u/format-color 'blue (format "Unpack the conda environment into %s/%s..."
-                                            dest-dir envname)))
+                                            env-dest-dir envname)))
     (when jar-path
       ;; Archive file or directory
-      (files/extract-env-from-archive jar-path component dest-dir)
+      (cond
+        (= envtype "environment") 
+        (files/extract-env-from-archive jar-path component env-dest-dir)
+
+        (= envtype "configuration") 
+        (files/extract-env-from-archive jar-path component config-dir)
+
+        (= envtype "data") 
+        (files/extract-env-from-archive jar-path component data-dir))
       (when post-unpack-cmd
         (log/info (u/format-color 'blue (format "Run post-unpack-cmd: %s" post-unpack-cmd)))
         (log/info (files/call-command! post-unpack-cmd))))))

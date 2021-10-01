@@ -8,27 +8,34 @@
             [tservice.plugins.dependencies :as deps]
             [tservice.plugins.init-steps :as init-steps]
             [tservice.util :as u]
+            [tservice.lib.files :refer [make-plugin-subpath]]
             [tservice.lib.fs :as fs]
             [schema.core :as s]))
 
 (defonce ^:private initialized-plugin-names (atom #{}))
 
 (defn- init!
-  [{:keys [add-to-classpath! jar-path], init-steps :init, 
+  [{:keys [add-to-classpath! jar-path], init-steps :init
     {plugin-name :name} :info, plugin-or-plugins :plugin, :as manifest}]
   {:pre [(string? plugin-name)]}
 
   (when (deps/all-dependencies-satisfied? @initialized-plugin-names manifest)
     (let [plugins (u/one-or-many plugin-or-plugins)
-          env-dest-dir (fs/join-paths (fs/parent-path jar-path) "envs")]
+          plugin-name (:name (:plugin manifest))
+          env-dest-dir (fs/join-paths (fs/parent-path jar-path) "envs")
+          config-dir (make-plugin-subpath "configs" plugin-name)
+          data-dir (make-plugin-subpath "data" plugin-name)]
       ;; if *any* of the plugins is not lazy-load, initialize it now
       (when (some false? (map :lazy-load plugins))
         (when add-to-classpath!
           (add-to-classpath!))
-        (when (not (fs/exists? env-dest-dir))
-          (fs/create-directories! env-dest-dir))
+        (doseq [dir [env-dest-dir config-dir data-dir]]
+          (when (not (fs/exists? dir))
+            (fs/create-directories! dir)))
         (init-steps/do-init-steps! init-steps {:jar-path jar-path
-                                               :dest-dir env-dest-dir
+                                               :env-dest-dir env-dest-dir
+                                               :config-dir config-dir
+                                               :data-dir data-dir
                                                :plugin-info (:info manifest)})))
     ;; record this plugin as initialized and find any plugins ready to be initialized because depended on this one !
     ;;
