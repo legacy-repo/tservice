@@ -107,6 +107,21 @@
                                  :response-schema response-schema
                                  :params-schema params-schema}))]})
 
+(defmethod make-plugin-metadata :ChartPlugin
+  make-chart-plugin-route
+  [{:keys [^String name params-schema handler plugin-type response-type
+           ^String summary response-schema]
+    :or {summary nil
+         response-schema (get-response-schema response-type)}}]
+  {:route [(str "/chart/" name)
+           (merge {:tags ["Chart"]}
+                  (gen-response {:name name
+                                 :summary summary
+                                 :handler handler
+                                 :plugin-type plugin-type
+                                 :response-schema response-schema
+                                 :params-schema params-schema}))]})
+
 ;;; ------------------------------------------------ Event Metadata -------------------------------------------------
 (defonce ^:private report-plugin-events
   (atom {}))
