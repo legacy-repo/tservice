@@ -73,10 +73,10 @@
     (add-plugin-env plugin-name
                     {:plugin-name plugin-name
                      :plugin-version (:version (:info info))
-                     :plugin-info info
+                     :plugin-info (dissoc info :add-to-classpath!)
                      :data-dir (make-plugin-subpath "data" plugin-name)
                      :env-dir (make-plugin-subpath "envs" plugin-name)
-                     :jar-path (:jar-path info)
+                     :jar-path (.getFileName (:jar-path info))
                      :config-dir (make-plugin-subpath "configs" plugin-name)})))
 
 (defn- init-plugin!
