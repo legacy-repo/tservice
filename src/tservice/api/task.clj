@@ -7,6 +7,7 @@
             [clojure.tools.logging :as log]
             [clojure.string :as clj-str]
             [clojure.core.async :as async]
+            [tservice.plugins.plugin-proxy :refer [get-plugin-env]]
             [spec-tools.json-schema :as json-schema]
             [tservice.lib.files :refer [get-relative-filepath]]
             [tservice.api.schema.task :refer [get-response-schema]]))
@@ -66,7 +67,9 @@
                      (let [auth-users (get headers "x-auth-users")
                            owner (first (clj-str/split auth-users #","))]
                        {:status 201
-                        :body (make-response (merge {:response-type (keyword response-type)} (handler (merge body {:owner owner}))))}))}})
+                        :body (make-response (merge {:response-type (keyword response-type)}
+                                                    (handler (merge body {:owner owner
+                                                                          :plugin-env (get-plugin-env name)}))))}))}})
 
 ;; Support :ReportPlugin, :ToolPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))

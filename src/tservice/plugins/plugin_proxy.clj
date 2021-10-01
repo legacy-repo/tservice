@@ -3,6 +3,18 @@
   (:require [clojure.tools.logging :as log]
             [tservice.util :as u]))
 
+(defonce ^:private plugin-envs
+  (atom nil))
+
+(defn add-plugin-env
+  [plugin-name env]
+  (reset! plugin-envs (merge @plugin-envs 
+                             (hash-map (keyword plugin-name) env))))
+
+(defn get-plugin-env
+  [plugin-name]
+  (get @plugin-envs (keyword plugin-name)))
+
 (defonce ^:private plugins-metadata
   (atom nil))
 
