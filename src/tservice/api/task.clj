@@ -3,10 +3,10 @@
             [tservice.util :as util]
             [clojure.data.json :as json]
             [tservice.events :as events]
-            [tservice.config :refer [which-database]]
             [clojure.tools.logging :as log]
             [clojure.string :as clj-str]
             [clojure.core.async :as async]
+            [camel-snake-kebab.core :as csk]
             [tservice.plugins.plugin-proxy :refer [get-plugin-env]]
             [spec-tools.json-schema :as json-schema]
             [tservice.lib.files :refer [get-relative-filepath]]
@@ -17,17 +17,15 @@
   [topic event-item]
   (events/publish-event! (str topic "-convert") event-item))
 
-;; ----------------------------- HTTP Metadata -------------------------------
-(def ^:private response-identities
-  {:data2files #{:log :files :total :response_type}
-   :data2report #{:log :report :response_type}
-   :data2data #{:log :data}})
+(defn get-owner-from-headers
+  "The first user is treated as the owner."
+  [headers]
+  (let [auth-users (get headers "x-auth-users")
+        owner (when auth-users (first (clj-str/split auth-users #",")))]
+    owner))
 
-(defn get-reponse-keys
-  [response-type]
-  (vec ((keyword response-type) response-identities)))
-
-;;; Convert the user's response into a standard response(data2report/data2files)
+;; ----------------------------- HTTP Response -------------------------------
+;;; Convert the user's response into a standard response(data2report/data2files/data2chart/data2data)
 (defmulti make-response (fn [response] (:response-type response)))
 
 (defmethod make-response :data2report
@@ -45,12 +43,178 @@
    :response_type :data2data})
 
 (defmethod make-response :data2files
-  make-data2report-response
+  make-data2files-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :files (map #(get-relative-filepath % :filemode false) (:files response))
    :response_type :data2files})
 
+(defmethod make-response :data2chart
+  make-data2chart-response
+  [response]
+  {:log (get-relative-filepath (:log response) :filemode false)
+   :data {:charts (map #(get-relative-filepath % :filemode false) (:charts response))
+          :results (map #(get-relative-filepath % :filemode false) (:results response))}
+   :response_type :data2chart})
+
+;; ----------------------------- HTTP Methods/General -------------------------------
+(defn- make-request-context
+  {:added "0.6.0"}
+  [plugin-name plugin-type owner]
+  {:owner owner
+   :plugin-env (merge (get-plugin-env plugin-name)
+                      {:plugin-type (name plugin-type)})})
+
+(defmulti make-method
+  {:added "0.6.0"}
+  (fn [context] (:method-type context)))
+
+(defmethod make-method :get
+  make-get-method
+  [{:keys [plugin-name plugin-type endpoint summary query-schema path-schema response-schema handler]
+    :or {endpoint plugin-name}}]
+  (hash-map (keyword endpoint)
+            {:get {:summary (or summary (format "A json schema for %s" plugin-name))
+                   :parameters {:query query-schema
+                                :path path-schema}
+                   :responses {200 {:body (or response-schema map?)}}
+                   :handler (fn [{{:keys [query path]} :parameters
+                                  {:as headers} :headers}]
+                              (let [owner (get-owner-from-headers headers)]
+                                {:status 200
+                                 :body (handler
+                                        (merge query path
+                                               (make-request-context plugin-name plugin-type owner)))}))}}))
+
+(defmethod make-method :post
+  make-post-method
+  [{:keys [plugin-name plugin-type endpoint summary body-schema response-type response-schema handler]
+    :or {endpoint plugin-name}}]
+  (hash-map (keyword endpoint)
+            {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
+                    :parameters {:body body-schema}
+                    :responses {201 {:body (or response-schema map?)}}
+                    :handler (fn [{{:keys [body]} :parameters
+                                   {:as headers} :headers}]
+                               (let [owner (get-owner-from-headers headers)]
+                                 {:status 201
+                                  :body (make-response
+                                         (merge {:response-type (keyword response-type)}
+                                                (handler (merge body
+                                                                (make-request-context plugin-name plugin-type owner)))))}))}}))
+
+(defmethod make-method :put
+  make-put-method
+  [{:keys [plugin-name plugin-type endpoint summary body-schema path-schema response-schema handler]
+    :or {endpoint plugin-name}}]
+  (hash-map (keyword endpoint)
+            {:put {:summary (or summary (format "Update a(n) task for %s plugin %s." plugin-type plugin-name))
+                   :parameters {:body body-schema
+                                :path path-schema}
+                   :responses {200 {:body (or response-schema map?)}}
+                   :handler (fn [{{:keys [body path]} :parameters
+                                  {:as headers} :headers}]
+                              (let [owner (get-owner-from-headers headers)]
+                                {:status 200
+                                 :body (handler (merge body path
+                                                       (make-request-context plugin-name plugin-type owner)))}))}}))
+
+(defmethod make-method :delete
+  make-delete-method
+  [{:keys [plugin-name plugin-type endpoint summary path-schema response-schema handler]
+    :or {endpoint plugin-name}}]
+  (hash-map (keyword endpoint)
+            {:delete {:summary (or summary (format "Delete a(n) task for %s plugin %s." plugin-type plugin-name))
+                      :parameters {:path path-schema}
+                      :responses {200 {:body (or response-schema map?)}}
+                      :handler (fn [{{:keys [path]} :parameters
+                                     {:as headers} :headers}]
+                                 (let [owner (get-owner-from-headers headers)]
+                                   {:status 200
+                                    :body (handler (merge path
+                                                          (make-request-context plugin-name plugin-type owner)))}))}}))
+(defn- ->methods
+  "Convert the forms to the http methods.
+   
+   Form is a hash map which contains several elements for building http method. And different http method
+   need different elements. such as get method need to have these keys: method-type, endpoint, summary,
+   query-schema, path-schema, response-schema and handler."
+  {:added "0.6.0"}
+  [plugin-name plugin-type & forms]
+  (map (fn [form] (make-method (merge {:plugin-name plugin-name
+                                       :plugin-type plugin-type} form))) forms))
+
+(defn- merge-map-array
+  "Merge a list of hash-map. 
+   It will merge the value which have the same key into a vector, but the value must be a collection.
+   
+   Such as: [{:get {:a 1}} {:get {:b 2}}] -> {:get {:a 1 :b 2}}"
+  {:added "0.6.0"}
+  [array]
+  (apply merge-with into array))
+
+(defn- get-endpoint-prefix
+  "Generate endpoint prefix from plugin-type.
+   
+   Such as: :DataPlugin --> /data"
+  {:added "0.6.0"}
+  [plugin-type]
+  (str "/" (first (clj-str/split
+                   (csk/->kebab-case (name plugin-type)) #"-"))))
+
+(defn- get-tag
+  "Generate swargger tag from plugin-type.
+   
+   Such as: :DataPlugin --> Data"
+  {:added "0.6.0"}
+  [plugin-type]
+  (clj-str/capitalize
+   (first (clj-str/split
+           (csk/->kebab-case (name plugin-type)) #"-"))))
+
+(defn make-routes
+  "Make several forms into routes for plugin.
+   
+   Examples:
+   (make-routes \"corrplot\" :ChartPlugin
+                {:method-type :get
+                 :endpoint \"report\"
+                 :summary \"\"
+                 :query-schema {}
+                 :path-schema {}
+                 :response-schema {}
+                 :handler (fn [context] context)}
+                {:method-type :post
+                 :endpoint \"report\"
+                 :summary \"\"
+                 :body-schema {}
+                 :response-type :data2files
+                 :response-schema {}
+                 :handler (fn [context] context)}
+                {:method-type :put
+                 :endpoint \"report\"
+                 :summary \"\"
+                 :body-schema {}
+                 :path-schema {}
+                 :response-schema {}
+                 :handler (fn [context] context)}
+                {:method-type :get
+                 :endpoint \"report\"
+                 :summary \"\"
+                 :path-schema {}
+                 :response-schema {}
+                 :handler (fn [context] context)})"
+  {:added "0.6.0"}
+  [plugin-name plugin-type & forms]
+  (let [methods (apply ->methods plugin-name plugin-type forms)
+        endpoints (merge-map-array methods)]
+    {:routes (map (fn [[k v]] [(str (get-endpoint-prefix plugin-type)
+                                    "/"
+                                    (name k))
+                               (merge {:tags [(get-tag plugin-type)]}
+                                      v)]) endpoints)}))
+
+;; ----------------------------- HTTP Methods/Special -------------------------------
 (defn- gen-response
   [{:keys [name summary plugin-type params-schema response-schema response-type handler]}]
   {:get   {:summary (format "A json schema for %s" name)
@@ -64,17 +228,16 @@
           :responses {201 {:body response-schema}}
           :handler (fn [{{:keys [body]} :parameters
                          {:as headers} :headers}]
-                     (let [auth-users (get headers "x-auth-users")
-                           owner (when auth-users (first (clj-str/split auth-users #",")))]
+                     (let [owner (get-owner-from-headers headers)]
                        {:status 201
                         :body (make-response
                                (merge {:response-type (keyword response-type)}
                                       (handler (merge body
                                                       {:owner owner
                                                        :plugin-env (merge (get-plugin-env name)
-                                                                          {:plugin-type plugin-type})}))))}))}})
+                                                                          {:plugin-type (clojure.core/name plugin-type)})}))))}))}})
 
-;; Support :ReportPlugin, :ToolPlugin, :DataPlugin, :StatPlugin
+;; Support :ReportPlugin, :ToolPlugin, :ChartPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))
 
 (defmethod make-plugin-metadata :ReportPlugin
@@ -192,7 +355,6 @@
            plugin-type plugin-version response owner]
     :as task}]
   ;; TODO: response need to contain response-type field.
-  (println "create-task!: " task)
   (let [updated-task (-> (assoc task :response (json/write-str (make-response response)))
                          (assoc :payload (json/write-str payload))
                          (dissoc :response-type))]

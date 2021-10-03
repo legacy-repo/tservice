@@ -50,6 +50,7 @@
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-servlet "1.7.1"]
                  [org.clojure/data.csv "1.0.0"]
+                 [camel-snake-kebab "0.4.2"]
                  [selmer "1.12.27"]
                  [org.clojars.yjcyxky/coql "0.1.0"]                                 ; Turn query json into SQL.
                  [clj-filesystem "0.2.7"]
