@@ -33,21 +33,24 @@
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :report (get-relative-filepath (:report response) :filemode false)
-   :response_type :data2report})
+   :response_type :data2report
+   :task_id (:task-id response)})
 
 (defmethod make-response :data2data
   make-data2data-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :data (:data response)
-   :response_type :data2data})
+   :response_type :data2data
+   :task_id (:task-id response)})
 
 (defmethod make-response :data2files
   make-data2files-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :files (map #(get-relative-filepath % :filemode false) (:files response))
-   :response_type :data2files})
+   :response_type :data2files
+   :task_id (:task-id response)})
 
 (defmethod make-response :data2chart
   make-data2chart-response
@@ -55,7 +58,8 @@
   {:log (get-relative-filepath (:log response) :filemode false)
    :data {:charts (map #(get-relative-filepath % :filemode false) (:charts response))
           :results (map #(get-relative-filepath % :filemode false) (:results response))}
-   :response_type :data2chart})
+   :response_type :data2chart
+   :task_id (:task-id response)})
 
 ;; ----------------------------- HTTP Methods/General -------------------------------
 (defn- make-request-context
