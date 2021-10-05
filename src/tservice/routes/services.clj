@@ -75,7 +75,9 @@
            :handler (fn [_]
                       (let [manifest (concat (plugin/get-manifest) (plugin-jars/get-manifest))]
                         (if manifest
-                          {:body manifest
+                          {:body {:data manifest
+                                  :success true
+                                  :total (count manifest)}
                            :status 200}
                           {:body {:msg "No manifest file."
                                   :status 404}})))}}]
