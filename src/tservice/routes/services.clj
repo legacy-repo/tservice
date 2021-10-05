@@ -47,7 +47,8 @@
    ;; swagger documentation
    ["" {:no-doc true
         :swagger {:info {:title "API Service for Tservice"
-                         :description "https://cljdoc.org/d/metosin/reitit"}}}
+                         :description "https://cljdoc.org/d/metosin/reitit"
+                         :version "v1"}}}
 
     ["/swagger.json"
      {:get (swagger/create-swagger-handler)}]
@@ -59,8 +60,12 @@
 
    ["/version"
     {:tags ["Utility"]
-     :get (constantly (ok {:version (v/get-version "org.clojars.yjcyxky" "tservice")
-                           :db_version (db/get-db-version)}))}]
+     :get {:summary "Get the version of tservice instance."
+           :parameters {}
+           :responses {200 {:body specs/instance-version}}
+           :handler (fn [_]
+                      (ok {:version (v/get-version "org.clojars.yjcyxky" "tservice")
+                           :db_version (db/get-db-version)}))}}]
 
    ["/manifest"
     {:tags ["Utility"]

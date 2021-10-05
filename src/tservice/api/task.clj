@@ -75,8 +75,7 @@
 
 (defmethod make-method :get
   make-get-method
-  [{:keys [plugin-name plugin-type endpoint summary query-schema path-schema response-schema handler]
-    :or {endpoint plugin-name}}]
+  [{:keys [plugin-name plugin-type endpoint summary query-schema path-schema response-schema handler]}]
   (hash-map (keyword endpoint)
             {:get {:summary (or summary (format "A json schema for %s" plugin-name))
                    :parameters {:query query-schema
@@ -92,25 +91,33 @@
 
 (defmethod make-method :post
   make-post-method
-  [{:keys [plugin-name plugin-type endpoint summary body-schema response-type response-schema handler]
-    :or {endpoint plugin-name}}]
+  [{:keys [plugin-name plugin-type endpoint summary enable-schema? body-schema response-type response-schema handler]
+    :or {enable-schema? true}}]
   (hash-map (keyword endpoint)
-            {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
-                    :parameters {:body body-schema}
-                    :responses {201 {:body (or response-schema map?)}}
-                    :handler (fn [{{:keys [body]} :parameters
-                                   {:as headers} :headers}]
-                               (let [owner (get-owner-from-headers headers)]
-                                 {:status 201
-                                  :body (make-response
-                                         (merge {:response-type (keyword response-type)}
-                                                (handler (merge body
-                                                                (make-request-context plugin-name plugin-type owner)))))}))}}))
+            (merge
+             (if enable-schema?
+               {:get {:summary (format "A json schema for %s" plugin-name)
+                      :parameters {}
+                      :responses {200 {:body map?}}
+                      :handler (fn [_]
+                                 {:status 200
+                                  :body (json-schema/transform body-schema)})}}
+               {})
+             {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
+                     :parameters {:body body-schema}
+                     :responses {201 {:body (or response-schema map?)}}
+                     :handler (fn [{{:keys [body]} :parameters
+                                    {:as headers} :headers}]
+                                (let [owner (get-owner-from-headers headers)]
+                                  {:status 201
+                                   :body (make-response
+                                          (merge {:response-type (keyword response-type)}
+                                                 (handler (merge body
+                                                                 (make-request-context plugin-name plugin-type owner)))))}))}})))
 
 (defmethod make-method :put
   make-put-method
-  [{:keys [plugin-name plugin-type endpoint summary body-schema path-schema response-schema handler]
-    :or {endpoint plugin-name}}]
+  [{:keys [plugin-name plugin-type endpoint summary body-schema path-schema response-schema handler]}]
   (hash-map (keyword endpoint)
             {:put {:summary (or summary (format "Update a(n) task for %s plugin %s." plugin-type plugin-name))
                    :parameters {:body body-schema
@@ -125,8 +132,7 @@
 
 (defmethod make-method :delete
   make-delete-method
-  [{:keys [plugin-name plugin-type endpoint summary path-schema response-schema handler]
-    :or {endpoint plugin-name}}]
+  [{:keys [plugin-name plugin-type endpoint summary path-schema response-schema handler]}]
   (hash-map (keyword endpoint)
             {:delete {:summary (or summary (format "Delete a(n) task for %s plugin %s." plugin-type plugin-name))
                       :parameters {:path path-schema}
@@ -146,6 +152,7 @@
   {:added "0.6.0"}
   [plugin-name plugin-type & forms]
   (map (fn [form] (make-method (merge {:plugin-name plugin-name
+                                       :endpoint (or (:endpoint form) plugin-name)
                                        :plugin-type plugin-type} form))) forms))
 
 (defn- merge-map-array
@@ -190,6 +197,7 @@
                  :handler (fn [context] context)}
                 {:method-type :post
                  :endpoint \"report\"
+                 :enable-schema? true
                  :summary \"\"
                  :body-schema {}
                  :response-type :data2files

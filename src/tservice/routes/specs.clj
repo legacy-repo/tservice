@@ -2,6 +2,46 @@
   (:require [clojure.spec.alpha :as s]
             [spec-tools.core :as st]))
 
+(s/def ::version
+  (st/spec {:spec string?
+            :type :string
+            :description "Version of tservice instance."
+            :swagger/default "0.6.0-1-39ac444-SNAPSHOT"
+            :reason "Version number is not valid."}))
+
+(s/def ::id
+  (st/spec {:spec number?
+            :type :number
+            :description "Migration Id."
+            :swagger/default 2021081501
+            :reason "Migration id is not valid."}))
+
+(s/def ::applied
+  (st/spec {:spec number?
+            :type :number
+            :description "Applied Id."
+            :swagger/default 1631880547270
+            :reason "Applied id is not valid."}))
+
+(s/def ::description
+  (st/spec {:spec string?
+            :type :string
+            :description "The description of database migration."
+            :swagger/default "init-tables"
+            :reason "The description is not valid."}))
+
+(def db-version
+  "A spec for the db version."
+  (s/keys :req-un [::id ::applied ::description]
+          :opt-un []))
+
+(s/def ::db_version (s/coll-of db-version))
+
+(def instance-version
+  "A spec for the version"
+  (s/keys :req-un [::version ::db_version]
+          :opt-un []))
+
 ;; More Details for `:type`: https://cljdoc.org/d/metosin/spec-tools/0.6.1/doc/readme#type-based-conforming
 (s/def ::id
   (st/spec
