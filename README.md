@@ -189,37 +189,34 @@ init:
 
 #### How to get the plugin context?
 
-You can get the following variables related with plugin context by `get-plugin-env` function or :plugin-env variable from handler argument
+If you use `make-plugin-metadata` and `make-routes` to generate routes, then you can get the following variables from the handler's argument.
 
 ```clojure
-{:plugin-name "plugin-name"
- :plugin-version "plugin-version"
- :plugin-info "The content of tservice-plugin.yml"
- :data-dir "The data directory of the specified plugin, you can generate the data into the directory, all data can be shared by generated tasks of the plugin."
- :env-dir "The env directory of the specified plugin."
- :jar-path "The jar path of the specified plugin."
- :config-dir "The config directory of the specified plugin. When you need to access static files from the plugin, you can located these files into resources directory. TService will copy all these files into config directory if you define a specified unpack-env step in tservice-plugin.yml."}
+{
+  ;; All fields which you defined by `body-schema`, `query-schema`, `path-schema`
+  :owner          "current user, maybe email or username."
+  :workdir        "working directory, you can use it as the output directory."
+  :uuid           "uuid is the part of workdir and maybe you need to use it to create a task."
+  :plugin-context {:plugin-name "plugin-name"
+                   :plugin-version "plugin-version"
+                   :plugin-info "The content of tservice-plugin.yml"
+                   :data-dir "The data directory of the specified plugin, you can generate the data into the directory, all data can be shared by generated tasks of the plugin."
+                   :env-dir "The env directory of the specified plugin."
+                   :jar-path "The jar path of the specified plugin."
+                   :config-dir "The config directory of the specified plugin. When you need to access static files from the plugin, you can located these files into resources directory. TService will copy all these files into config directory if you define a specified unpack-env step in tservice-plugin.yml."}
+}
 ```
 
-Example 1:
-
 ```clojure
-(require '[tservice.plugins.plugin-proxy :refer [get-plugin-env]])
+;; #>>> make-plugin-metadata <<<#
 
-;; If your plugin name is example, you can get the plugin context by the following code
-(get-plugin-env "example")
-```
-
-Example 2:
-
-```clojure
 (require '[tservice.api.task :refer [make-plugin-metadata]])
 
 (make-plugin-metadata
  {:name "xps2pdf"
   :params-schema xps2pdf-params-body
-  :handler (fn [{:keys [filepath plugin-env]}]
-             (println "This is the plugin context: " plugin-env))
+  :handler (fn [{:keys [filepath plugin-context owner uuid workdir]}]
+             (println "This is the plugin context: " plugin-context))
   :plugin-type :ToolPlugin
   :response-type :data2files})
 ```

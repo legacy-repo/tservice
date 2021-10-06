@@ -5,7 +5,7 @@
             [tservice.lib.files :as files :refer [get-plugin-jar-dir make-plugin-subpath]]
             [tservice.plugins.classloader :as classloader]
             [tservice.plugins.initialize :as initialize]
-            [tservice.plugins.plugin-proxy :refer [get-plugins-metadata add-plugin-env]]
+            [tservice.plugins.plugin-proxy :refer [get-plugins-metadata add-plugin-context]]
             [yaml.core :as yaml])
   (:import [java.nio.file Files Path]))
 
@@ -70,14 +70,14 @@
   [info]
   (initialize/init-plugin-with-info! info)
   (when-let [plugin-name (:name (:plugin info))]
-    (add-plugin-env plugin-name
-                    {:plugin-name plugin-name
-                     :plugin-version (:version (:info info))
-                     :plugin-info (dissoc info :add-to-classpath! :jar-path)
-                     :data-dir (make-plugin-subpath "data" plugin-name)
-                     :env-dir (make-plugin-subpath "envs" plugin-name)
-                     :jar-path (.toString (:jar-path info))
-                     :config-dir (make-plugin-subpath "configs" plugin-name)})))
+    (add-plugin-context plugin-name
+                        {:plugin-name plugin-name
+                         :plugin-version (:version (:info info))
+                         :plugin-info (dissoc info :add-to-classpath! :jar-path)
+                         :data-dir (make-plugin-subpath "data" plugin-name)
+                         :env-dir (make-plugin-subpath "envs" plugin-name)
+                         :jar-path (.toString (:jar-path info))
+                         :config-dir (make-plugin-subpath "configs" plugin-name)})))
 
 (defn- init-plugin!
   "Init plugin JAR file; returns truthy if plugin initialization was successful."

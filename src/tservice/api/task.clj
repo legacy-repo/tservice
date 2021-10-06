@@ -7,9 +7,9 @@
             [clojure.string :as clj-str]
             [clojure.core.async :as async]
             [camel-snake-kebab.core :as csk]
-            [tservice.plugins.plugin-proxy :refer [get-plugin-env]]
+            [tservice.plugins.plugin-proxy :refer [get-plugin-context]]
             [spec-tools.json-schema :as json-schema]
-            [tservice.lib.files :refer [get-relative-filepath]]
+            [tservice.lib.files :refer [get-relative-filepath get-workdir]]
             [tservice.api.schema.task :refer [get-response-schema]]))
 
 ;; -------------------------------- Re-export --------------------------------
@@ -25,7 +25,7 @@
     owner))
 
 ;; ----------------------------- HTTP Response -------------------------------
-;;; Convert the user's response into a standard response(data2report/data2files/data2chart/data2data)
+;;; Convert the user's response into a standard response(data2report/data2files/data2charts/data2data)
 (defmulti make-response (fn [response] (:response-type response)))
 
 (defmethod make-response :data2report
@@ -52,22 +52,27 @@
    :response_type :data2files
    :task_id (:task-id response)})
 
-(defmethod make-response :data2chart
-  make-data2chart-response
+(defmethod make-response :data2charts
+  make-data2charts-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :data {:charts (map #(get-relative-filepath % :filemode false) (:charts response))
           :results (map #(get-relative-filepath % :filemode false) (:results response))}
-   :response_type :data2chart
+   :response_type :data2charts
    :task_id (:task-id response)})
 
 ;; ----------------------------- HTTP Methods/General -------------------------------
 (defn- make-request-context
   {:added "0.6.0"}
   [plugin-name plugin-type owner]
-  {:owner owner
-   :plugin-env (merge (get-plugin-env plugin-name)
-                      {:plugin-type (name plugin-type)})})
+  (let [uuid (util/uuid)]
+    {:owner owner
+     :uuid uuid
+     :workdir (if owner
+                (get-workdir :username owner :uuid uuid)
+                (get-workdir :uuid uuid))
+     :plugin-context (merge (get-plugin-context plugin-name)
+                            {:plugin-type (name plugin-type)})}))
 
 (defmulti make-method
   {:added "0.6.0"}
@@ -105,7 +110,7 @@
                {})
              {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
                      :parameters {:body body-schema}
-                     :responses {201 {:body (or response-schema map?)}}
+                     :responses {201 {:body (or response-schema (get-response-schema response-type) map?)}}
                      :handler (fn [{{:keys [body]} :parameters
                                     {:as headers} :headers}]
                                 (let [owner (get-owner-from-headers headers)]
@@ -136,7 +141,7 @@
   (hash-map (keyword endpoint)
             {:delete {:summary (or summary (format "Delete a(n) task for %s plugin %s." plugin-type plugin-name))
                       :parameters {:path path-schema}
-                      :responses {200 {:body (or response-schema map?)}}
+                      :responses {200 {:body (or response-schema (get-response-schema plugin-type) map?)}}
                       :handler (fn [{{:keys [path]} :parameters
                                      {:as headers} :headers}]
                                  (let [owner (get-owner-from-headers headers)]
@@ -245,9 +250,7 @@
                         :body (make-response
                                (merge {:response-type (keyword response-type)}
                                       (handler (merge body
-                                                      {:owner owner
-                                                       :plugin-env (merge (get-plugin-env name)
-                                                                          {:plugin-type (clojure.core/name plugin-type)})}))))}))}})
+                                                      (make-request-context name plugin-type owner)))))}))}})
 
 ;; Support :ReportPlugin, :ToolPlugin, :ChartPlugin, :DataPlugin, :StatPlugin
 (defmulti make-plugin-metadata (fn [plugin-metadata] (:plugin-type plugin-metadata)))

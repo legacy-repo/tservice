@@ -50,12 +50,12 @@
                                 :log "/tservice/test.log"
                                 :files ["/tservice/test.csv"]}))))
 
-  (testing "make a response for data2chart type."
+  (testing "make a response for data2charts type."
     (is (= {:log "/test.log"
             :data {:charts ["/chart1.json"]
                    :results ["/result1.json"]}
-            :response_type :data2chart}
-           (task/make-response {:response-type :data2chart
+            :response_type :data2charts}
+           (task/make-response {:response-type :data2charts
                                 :log "/tservice/test.log"
                                 :charts ["/tservice/chart1.json"]
                                 :results ["/tservice/result1.json"]})))))

@@ -3,17 +3,17 @@
   (:require [clojure.tools.logging :as log]
             [tservice.util :as u]))
 
-(defonce ^:private plugin-envs
+(defonce ^:private plugin-contexts
   (atom nil))
 
-(defn add-plugin-env
+(defn add-plugin-context
   [plugin-name env]
-  (reset! plugin-envs (merge @plugin-envs 
-                             (hash-map (keyword plugin-name) env))))
+  (reset! plugin-contexts (merge @plugin-contexts
+                                 (hash-map (keyword plugin-name) env))))
 
-(defn get-plugin-env
+(defn get-plugin-context
   [plugin-name]
-  (get @plugin-envs (keyword plugin-name)))
+  (get @plugin-contexts (keyword plugin-name)))
 
 (defonce ^:private plugins-metadata
   (atom nil))

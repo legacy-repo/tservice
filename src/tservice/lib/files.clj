@@ -144,8 +144,10 @@
 (defn get-workdir
   ([]
    (fs/join-paths (get-tservice-workdir) (u/uuid)))
-  ([username]
-   (fs/join-paths (get-tservice-workdir) username (u/uuid))))
+  ([& {:keys [username uuid]}]
+   (let [uuid (or uuid (u/uuid))
+         subpath (if username (fs/join-paths username uuid) uuid)]
+     (fs/join-paths (get-tservice-workdir) subpath))))
 
 (defn- get-plugin-basedir
   []
@@ -229,7 +231,7 @@
            result (apply sh command)
            status (if (= (:exit result) 0) "Success" "Error")
            msg (str (:out result) "\n" (:err result))]
-       (log/info (format "Running the Command: %s (Environment: %s; Working Directory: %s; Status: %s; Msg: %s)" 
+       (log/info (format "Running the Command: %s (Environment: %s; Working Directory: %s; Status: %s; Msg: %s)"
                          command env workdir
                          status msg))
        {:status status
