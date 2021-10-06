@@ -54,7 +54,7 @@
               :responses  {200 {:body map?}}
               :handler    (fn [{{{:keys [id]} :path} :parameters}]
                             (log/debug "Get task: " id)
-                            (ok (db-handler/search-task id)))}
+                            (ok (db-handler/convert-record (db-handler/search-task id))))}
 
      :delete {:summary    "Delete a task."
               :parameters {:path specs/task-id}

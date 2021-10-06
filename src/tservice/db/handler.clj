@@ -147,14 +147,15 @@
    {:query-func db/search-tasks
     :count-func db/count-tasks}))
 
+(defn convert-record
+  [record]
+  (-> record
+      (assoc :response (json/read-str (:response record)))
+      (assoc :payload (json/read-str (:payload record)))))
+
 (defn convert-records
   [results]
-  (assoc results
-         :data (map (fn [record]
-                      (-> record
-                          (assoc :response (json/read-str (:response record)))
-                          (assoc :payload (json/read-str (:payload record)))))
-                    (:data results))))
+  (assoc results :data (map convert-record (:data results))))
 
 (def search-task
   (partial
