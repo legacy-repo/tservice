@@ -29,7 +29,8 @@
   (testing "make a response for data2report type."
     (is (= {:log "/test.log"
             :report "/report"
-            :response_type :data2report}
+            :response_type "data2report"
+            :task_id nil}
            (task/make-response {:response-type :data2report
                                 :log "/tservice/test.log"
                                 :report "/tservice/report"}))))
@@ -37,7 +38,8 @@
   (testing "make a response for data2data type."
     (is (= {:log "/test.log"
             :data {}
-            :response_type :data2data}
+            :response_type "data2data"
+            :task_id nil}
            (task/make-response {:response-type :data2data
                                 :log "/tservice/test.log"
                                 :data {}}))))
@@ -45,16 +47,18 @@
   (testing "make a response for data2files type."
     (is (= {:log "/test.log"
             :files ["/test.csv"]
-            :response_type :data2files}
+            :response_type "data2files"
+            :task_id nil}
            (task/make-response {:response-type :data2files
                                 :log "/tservice/test.log"
                                 :files ["/tservice/test.csv"]}))))
 
   (testing "make a response for data2charts type."
     (is (= {:log "/test.log"
-            :data {:charts ["/chart1.json"]
-                   :results ["/result1.json"]}
-            :response_type :data2charts}
+            :charts ["/chart1.json"]
+            :results ["/result1.json"]
+            :response_type "data2charts"
+            :task_id nil}
            (task/make-response {:response-type :data2charts
                                 :log "/tservice/test.log"
                                 :charts ["/tservice/chart1.json"]

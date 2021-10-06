@@ -26,40 +26,40 @@
 
 ;; ----------------------------- HTTP Response -------------------------------
 ;;; Convert the user's response into a standard response(data2report/data2files/data2charts/data2data)
-(defmulti make-response (fn [response] (:response-type response)))
+(defmulti make-response (fn [response] (or (:response-type response) (:response_type response))))
 
 (defmethod make-response :data2report
   make-data2report-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :report (get-relative-filepath (:report response) :filemode false)
-   :response_type :data2report
-   :task_id (:task-id response)})
+   :response_type "data2report"
+   :task_id (or (:task_id response) (:task-id response))})
 
 (defmethod make-response :data2data
   make-data2data-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :data (:data response)
-   :response_type :data2data
-   :task_id (:task-id response)})
+   :response_type "data2data"
+   :task_id (or (:task_id response) (:task-id response))})
 
 (defmethod make-response :data2files
   make-data2files-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
    :files (map #(get-relative-filepath % :filemode false) (:files response))
-   :response_type :data2files
-   :task_id (:task-id response)})
+   :response_type "data2files"
+   :task_id (or (:task_id response) (:task-id response))})
 
 (defmethod make-response :data2charts
   make-data2charts-response
   [response]
   {:log (get-relative-filepath (:log response) :filemode false)
-   :data {:charts (map #(get-relative-filepath % :filemode false) (:charts response))
-          :results (map #(get-relative-filepath % :filemode false) (:results response))}
-   :response_type :data2charts
-   :task_id (:task-id response)})
+   :charts (map #(get-relative-filepath % :filemode false) (:charts response))
+   :results (map #(get-relative-filepath % :filemode false) (:results response))
+   :response_type "data2charts"
+   :task_id (or (:task_id response) (:task-id response))})
 
 ;; ----------------------------- HTTP Methods/General -------------------------------
 (defn- make-request-context
@@ -98,27 +98,39 @@
   make-post-method
   [{:keys [plugin-name plugin-type endpoint summary enable-schema? body-schema response-type response-schema handler]
     :or {enable-schema? true}}]
-  (hash-map (keyword endpoint)
-            (merge
-             (if enable-schema?
+  (merge
+   (if (and (= endpoint plugin-name) enable-schema?)
+     (hash-map (keyword (str endpoint "-schema"))
                {:get {:summary (format "A json schema for %s" plugin-name)
                       :parameters {}
                       :responses {200 {:body map?}}
                       :handler (fn [_]
                                  {:status 200
-                                  :body (json-schema/transform body-schema)})}}
-               {})
-             {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
-                     :parameters {:body body-schema}
-                     :responses {201 {:body (or response-schema (get-response-schema response-type) map?)}}
-                     :handler (fn [{{:keys [body]} :parameters
-                                    {:as headers} :headers}]
-                                (let [owner (get-owner-from-headers headers)]
-                                  {:status 201
-                                   :body (make-response
-                                          (merge {:response-type (keyword response-type)}
-                                                 (handler (merge body
-                                                                 (make-request-context plugin-name plugin-type owner)))))}))}})))
+                                  :body (json-schema/transform body-schema)})}})
+     {})
+   (hash-map (keyword endpoint)
+             (merge
+              ;; Provide the metadata of a plugin, defaultly.
+              (if (= endpoint plugin-name)
+                {:get {:summary (format "The metadata of the %s plugin" plugin-name)
+                       :parameters {}
+                       :responses {200 {:body map?}}
+                       :handler (fn [_]
+                                  (let [plugin-context (get-plugin-context plugin-name)]
+                                    {:status 200
+                                     :body (:info (:plugin-info plugin-context))}))}}
+                {})
+              {:post {:summary (or summary (format "Create a(n) task for %s plugin %s." plugin-type plugin-name))
+                      :parameters {:body body-schema}
+                      :responses {201 {:body (or response-schema (get-response-schema response-type) map?)}}
+                      :handler (fn [{{:keys [body]} :parameters
+                                     {:as headers} :headers}]
+                                 (let [owner (get-owner-from-headers headers)]
+                                   {:status 201
+                                    :body (make-response
+                                           (merge {:response-type (keyword response-type)}
+                                                  (handler (merge body
+                                                                  (make-request-context plugin-name plugin-type owner)))))}))}}))))
 
 (defmethod make-method :put
   make-put-method

@@ -23,9 +23,7 @@
 
 (s/def ::results (s/coll-of string?))
 
-(s/def ::data (s/keys :req-un [::charts ::results]))
-
-(s/def ::data2charts (s/keys :req-un [::log ::data ::response_type ::task_id]))
+(s/def ::data2charts (s/keys :req-un [::log ::charts ::results ::response_type ::task_id]))
 
 (def ^:private schemas
   {:data2report ::data2report
