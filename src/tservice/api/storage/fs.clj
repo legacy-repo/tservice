@@ -2,6 +2,8 @@
   (:require [clojure.java.io :as io]
             [me.raynes.fs :as fs]
             [tservice.lib.fs :as fs-lib]
+            [babashka.curl :as curl]
+            [clojure.string :as clj-str]
             [clj-filesystem.core :as clj-fs]))
 
 ;; -------------------------------- Re-export --------------------------------
@@ -145,3 +147,25 @@
     (if (fs-service? file-path)
       (copy-remote-file! file-path dest-dir options)
       (copy-local-file! file-path dest-dir options))))
+
+(defn download-file!
+  "Download file from oss/s3/minio/http(s)/local to the dest directory."
+  {:added "0.6.0"}
+  [datafile dest-dir]
+  ;; TODO: more robust?
+  (let [dest-file (fs-lib/join-paths dest-dir (basename datafile))]
+    (cond
+      (re-matches #"^(oss|minio|s3):\/\/\/.*" datafile)
+      (or (copy-files! datafile dest-dir {})
+          dest-file)
+
+      (re-matches #"^file:\/\/.*" datafile)
+      (clj-str/replace datafile #"^file:\/\/" "")
+
+      (re-matches #"^https?:\/\/.*" datafile)
+      (or (-> (curl/get datafile {:as :stream})
+              (:body)
+              (io/copy (io/file dest-file)))
+          dest-file)
+
+      :else datafile)))

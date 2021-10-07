@@ -54,6 +54,7 @@
                  [selmer "1.12.27"]
                  [org.clojars.yjcyxky/coql "0.1.0"]                                 ; Turn query json into SQL.
                  [clj-filesystem "0.2.7"]
+                 [babashka/babashka.curl "0.0.3"]
                  [io.forward/yaml "1.0.9"                                           ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
                   :exclusions [org.clojure/clojure
                                org.flatland/ordered
