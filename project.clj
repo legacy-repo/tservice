@@ -3,64 +3,70 @@
   :description "Make tool as a service."
   :url "https://github.com/clinico-omics/tservice"
 
-  :dependencies [[ch.qos.logback/logback-classic "1.2.3"]
+  :dependencies [;; Basic Components
+                 [ch.qos.logback/logback-classic "1.2.3"]
                  [org.clojure/tools.namespace "1.0.0"]
                  [org.clojure/core.async "0.4.500"
                   :exclusions [org.clojure/tools.reader]]
-                 [me.raynes/fs "1.4.6"]
+                 [org.clojure/clojure "1.10.1"]
+                 [org.clojure/tools.cli "1.0.194"]
+                 [org.clojure/tools.logging "1.1.0"]
+                 [org.tcrawley/dynapath "1.0.0"]                                    ; Dynamically add Jars (e.g. Oracle or Vertica) to classpath
                  [clojure.java-time "0.3.2"]
                  [colorize "0.1.1" :exclusions [org.clojure/clojure]]               ; string output with ANSI color codes (for logging)
-                 [org.tcrawley/dynapath "1.0.0"]                                    ; Dynamically add Jars (e.g. Oracle or Vertica) to classpath
-                 [danlentz/clj-uuid "0.1.9"]
-                 [com.fasterxml.jackson.core/jackson-core "2.11.0"]
-                 [com.fasterxml.jackson.core/jackson-databind "2.11.0"]
-                 [cprop "0.1.17"]
-                 [ring-cors "0.1.13"]
-                 [pdfboxing/pdfboxing "0.1.14"]
-                 [clj-file-zip "0.1.0"]
-                 [funcool/struct "1.4.0"]
-                 [luminus-transit "0.1.2"]
-                 [luminus/ring-ttl-session "0.3.3"]
-                 [markdown-clj "1.10.4"]
-                 [metosin/jsonista "0.2.6"]
-                 [metosin/muuntaja "0.6.7"]
-                 [metosin/reitit "0.5.2"]
-                 [metosin/ring-http-response "0.9.1"]
                  [mount "0.1.16"]
                  [nrepl "0.7.0"]
+                 [cprop "0.1.17"]
+                 [funcool/struct "1.4.0"]
+                 [clojurewerkz/quartzite "2.1.0"
+                  :exclusions [org.clojure/clojure]]                                ; scheduling library
+                 [expound "0.8.9"]                                                  ; Human-optimized error messages for clojure.spec
+
+                 ;; Utility
+                 [danlentz/clj-uuid "0.1.9"]
+                 [me.raynes/fs "1.4.6"]
+                 [clj-filesystem "0.2.7"]
+                 [clj-file-zip "0.1.0"]
+                 [camel-snake-kebab "0.4.2"]
+                 [babashka/babashka.curl "0.0.3"]
+                 [selmer "1.12.27"]
+
+                 ;; Database
                  [com.github.seancorfield/next.jdbc "1.2.674"]
                  [com.h2database/h2 "1.4.200"]
                  [org.xerial/sqlite-jdbc "3.34.0"]
                  [org.postgresql/postgresql "42.2.8"]
+                 [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
+                 [honeysql "1.0.444"]
                  [cheshire "5.9.0" :exclusions [org.clojure/clojure]]
                  [conman "0.8.4"
                   :exclusions [org.clojure/java.jdbc
                                org.clojure/clojure]]
-                 [clojurewerkz/quartzite "2.1.0"
-                  :exclusions [org.clojure/clojure]]                                ; scheduling library
+
+                 ;; Web Middleware
+                 [ring-cors "0.1.13"]
+                 [luminus-transit "0.1.2"]
+                 [luminus/ring-ttl-session "0.3.3"]
+                 [metosin/jsonista "0.2.6"]
+                 [metosin/muuntaja "0.6.7"]
+                 [metosin/reitit "0.5.2"]
+                 [metosin/ring-http-response "0.9.1"]
                  [luminus-jetty "0.1.7"
                   :exclusions [clj-time joda-time org.clojure/clojure]]
-                 [luminus-migrations "0.6.6" :exclusions [org.clojure/clojure]]
-                 [honeysql "1.0.444"]
-                 [org.clojure/clojure "1.10.1"]
-                 [org.clojure/tools.cli "1.0.194"]
-                 [org.clojure/tools.logging "1.1.0"]
                  [ring-webjars "0.2.0"]
                  [ring/ring-core "1.8.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-servlet "1.7.1"]
+
+                 ;; JSON/YAML/CSV
                  [org.clojure/data.csv "1.0.0"]
-                 [camel-snake-kebab "0.4.2"]
-                 [selmer "1.12.27"]
-                 [org.clojars.yjcyxky/coql "0.1.0"]                                 ; Turn query json into SQL.
-                 [clj-filesystem "0.2.7"]
-                 [babashka/babashka.curl "0.0.3"]
-                 [io.forward/yaml "1.0.9"                                           ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
+                 [com.fasterxml.jackson.core/jackson-core "2.11.0"]
+                 [com.fasterxml.jackson.core/jackson-databind "2.11.0"]
+                 [org.yaml/snakeyaml "1.23"]                                        ; YAML parser (required by liquibase)
+                 [io.forward/yaml "1.0.11"                                          ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
                   :exclusions [org.clojure/clojure
-                               org.flatland/ordered
-                               org.yaml/snakeyaml]]
-                 [org.yaml/snakeyaml "1.23"]                                       ; YAML parser (required by liquibase)
-                 [expound "0.8.9"]]                                                ; Human-optimized error messages for clojure.spec
+                               org.yaml/snakeyaml]]]
+
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]
                  ["jcenter" "https://maven.aliyun.com/repository/jcenter"]

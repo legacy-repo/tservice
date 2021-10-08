@@ -19,8 +19,6 @@
 
 (def zip-files fs-lib/zip-files)
 
-(def merge-pdf-files fs-lib/merge-pdf-files)
-
 (defn fs-service?
   [filepath]
   (re-matches #"^[a-zA-Z0-9]+:\/\/.*" filepath))

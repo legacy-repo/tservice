@@ -2,7 +2,6 @@
   "FS library"
   (:require [clojure.java.io :as io]
             [clojure.string :as string]
-            [pdfboxing.merge :as pdf]
             [clj-file-zip.core :as clj-zip])
   (:import (java.nio.file CopyOption
                           Files
@@ -655,10 +654,6 @@
 
 (defmacro with-temp-file [[dir-sym path-sym] & body]
   `(with-temp-file* (fn [~dir-sym ~path-sym] ~@body)))
-
-(defn merge-pdf-files
-  [from-files to-filepath]
-  (pdf/merge-pdfs :input from-files :output to-filepath))
 
 (defn zip-files
   [from-files to-filepath]

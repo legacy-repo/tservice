@@ -1,7 +1,5 @@
 (ns tservice.db.sql-helper
   (:require [clojure.string :as string]
-            [clojure.spec.alpha :as s]
-            [coql.core :refer [parse rules?]]
             [hugsql.parameters :refer [identifier-param-quote]]))
 
 (defn where-clause
@@ -19,9 +17,3 @@
                           (str primary-table (identifier-param-quote (name field) options)
                                " in (:v*:query-map." (name field) ")")))))))
   ([query-map options] (where-clause query-map options nil)))
-
-(defn coql->sqlvec
-  [json-query]
-  {:pre [(s/valid? rules? json-query)]
-   :post [(s/valid? coll? %)]}
-  [(parse json-query)])
