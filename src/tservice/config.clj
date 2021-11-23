@@ -117,3 +117,42 @@
     (when (not (s/valid? ::config config))
       (log/error "Configuration errors:\n" (expound-str ::config config))
       (System/exit 1))))
+
+(defn default-fs-service
+  "Get default fs service."
+  []
+  (:default-fs-service env))
+
+(defn in-coll?
+  [key coll]
+  (>= (.indexOf coll key) 0))
+
+(defn get-whitelist
+  [service]
+  (let [whitelist ((keyword service) (:whitelist env))]
+    (if (nil? whitelist)
+      []
+      whitelist)))
+
+(defn get-blacklist
+  [service]
+  (let [blacklist ((keyword service) (:blacklist env))]
+    (if (nil? blacklist)
+      []
+      blacklist)))
+
+(defn filter-buckets
+  [coll filter-list mode]
+  (if (= mode "white")
+    (filter (fn [item] (in-coll? (get item "Name") filter-list)) coll)
+    (filter (fn [item] (not (in-coll? (get item "Name") filter-list))) coll)))
+
+(defn filter-by-whitelist
+  "Save all items in whitelist."
+  [coll service]
+  (filter-buckets coll (get-whitelist service) "white"))
+
+(defn filter-by-blacklist
+  "Remove all items in blacklist."
+  [coll service]
+  (filter-buckets coll (get-blacklist service) "black"))

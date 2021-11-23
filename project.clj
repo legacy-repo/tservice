@@ -65,7 +65,8 @@
                  [org.yaml/snakeyaml "1.23"]                                        ; YAML parser (required by liquibase)
                  [io.forward/yaml "1.0.11"                                          ; Clojure wrapper for YAML library SnakeYAML (which we already use for liquibase)
                   :exclusions [org.clojure/clojure
-                               org.yaml/snakeyaml]]]
+                               org.yaml/snakeyaml]]
+                 [schmee/daguerreo "0.1.2"]]
 
 
   :repositories [["central" "https://maven.aliyun.com/repository/central"]

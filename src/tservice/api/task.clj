@@ -1,4 +1,5 @@
 (ns tservice.api.task
+  "DEPRECATED: `tservice.api.task` will be deprecated from v0.7.0, please use `tservice.api.plugin`."
   (:require [tservice.db.handler :as db-handler]
             [tservice.util :as util]
             [clojure.data.json :as json]

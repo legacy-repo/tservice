@@ -110,11 +110,11 @@
 
 (s/def ::plugin_type
   (st/spec
-   {:spec                #{"ReportPlugin" "StatPlugin" "DataPlugin" "ToolPlugin", "ChartPlugin"}
-    :type                :set
+   {:spec                (or #(some? (re-matches #"[A-Za-z_\-]+" %)) #{"ReportPlugin" "StatPlugin" "DataPlugin" "ToolPlugin", "ChartPlugin"})
+    :type                :string
     :description         "Filter tasks by plugin_type field."
     :swagger/default     "ReportPlugin"
-    :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`, `ToolPlugin`, `ChartPlugin`"}))
+    :reason              "Not valid plugin-type, only support `ReportPlugin`, `StatPlugin`, `DataPlugin`, `ToolPlugin`, `ChartPlugin` or your customized type."}))
 
 (s/def ::plugin_version
   (st/spec

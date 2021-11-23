@@ -19,6 +19,7 @@
             [tservice.plugin :as plugin]
             [tservice.plugin-jars :as plugin-jars]
             [tservice.routes.task :as task-route]
+            [tservice.routes.fs :as fs-route]
             [tservice.version :as v]
             [tservice.db.core :as db]))
 
@@ -46,7 +47,7 @@
 
    ;; swagger documentation
    ["" {:no-doc true
-        :swagger {:info {:title "API Service for Tservice"
+        :swagger {:info {:title "API Service for TService"
                          :description "https://cljdoc.org/d/metosin/reitit"
                          :version "v1"}}}
 
@@ -110,4 +111,5 @@
                           :body {:upload_path (str "file://" (get-relative-filepath to-dir))
                                  :files (map #(:filename %) files)
                                  :total (count files)}}))}}]
-   task-route/task])
+   task-route/task
+   fs-route/fs-service])

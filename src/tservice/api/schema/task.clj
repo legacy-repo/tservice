@@ -1,4 +1,5 @@
 (ns tservice.api.schema.task
+  "DEPRECATED: `tservice.api.schema.task` will be deprecated from v0.7.0, all api schemas are defined by each category of plugins."
   (:require [clojure.spec.alpha :as s]))
 
 (s/def ::task_id string?)
