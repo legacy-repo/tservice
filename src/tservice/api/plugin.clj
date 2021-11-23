@@ -274,7 +274,6 @@
                  :enable-schema? true
                  :summary \"\"
                  :body-schema {}
-                 :response-type :data2files
                  :response-schema {}
                  :handler (fn [context] context)}
                 {:method-type :put

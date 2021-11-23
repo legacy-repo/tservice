@@ -1,6 +1,7 @@
 (ns tservice.api.config
   (:require [tservice.lib.files :as files :refer [get-path-variable]]
-            [tservice.lib.fs :as fs-lib]))
+            [tservice.lib.fs :as fs-lib]
+            [tservice.config :as config]))
 
 (def get-workdir files/get-workdir)
 
@@ -13,3 +14,9 @@
                                         "envs" plugin-name "bin")
         path (get-path-variable)]
     (str env-bin-path ":" path)))
+
+(def get-minio-prefix config/get-minio-prefix)
+
+(defn get-minio-link
+  [subdir]
+  (fs-lib/join-paths (get-minio-prefix) subdir))

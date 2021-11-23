@@ -109,14 +109,44 @@
                                  ::fs-services ::default-fs-service]
                         :opt-un [::nrepl-port ::tasks ::cors-origins ::enable-cors]))
 
+(defn get-minio-rootdir
+  [env]
+  (let [fs-services (:fs-services env)
+        fs-rootdir (->> fs-services
+                        (filter #(= (:fs-service %) "minio"))
+                        (first)
+                        (:fs-rootdir))
+        fs-rootdir (or fs-rootdir "")]
+    fs-rootdir))
+
+(defn check-fs-root!
+  [env]
+  (let [fs-rootdir (get-minio-rootdir env)
+        tservice-workdir (:tservice-workdir env)]
+    (when-not (clj-str/starts-with? tservice-workdir fs-rootdir)
+      (log/error (format "tservice-workdir(%s) must be the child directory of fs-rootdir(%s)"
+                         tservice-workdir
+                         fs-rootdir))
+      (System/exit 1))))
+
 (defn check-config
   [env]
   (let [config (select-keys env [:port :nrepl-port :database-url :tservice-workdir
                                  :tservice-plugin-path :tservice-run-mode :fs-services
                                  :default-fs-service :tasks])]
+    (check-fs-root! env)
     (when (not (s/valid? ::config config))
       (log/error "Configuration errors:\n" (expound-str ::config config))
       (System/exit 1))))
+
+(defn get-minio-prefix
+  []
+  (let [fs-rootdir (get-minio-rootdir env)
+        tservice-workdir (:tservice-workdir env)
+        prefix (-> tservice-workdir
+                   (clj-str/replace (re-pattern fs-rootdir) "")
+                   (clj-str/replace #"^/" ""))]
+    (format "minio://%s" prefix)))
 
 (defn default-fs-service
   "Get default fs service."
