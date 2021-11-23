@@ -264,7 +264,9 @@
   [filepath & {:keys [filemode]
                :or {filemode true}}]
   (let [replace-str (if filemode "." "")]
-    (clj-str/replace filepath (re-pattern (get-tservice-workdir)) replace-str)))
+    (-> filepath
+        (clj-str/replace (re-pattern (get-tservice-workdir)) replace-str)
+        (clj-str/replace #"^\/" ""))))
 
 (defn which
   [bin-name]

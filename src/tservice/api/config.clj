@@ -1,5 +1,5 @@
 (ns tservice.api.config
-  (:require [tservice.lib.files :as files :refer [get-path-variable]]
+  (:require [tservice.lib.files :as files :refer [get-path-variable get-relative-filepath]]
             [tservice.lib.fs :as fs-lib]
             [tservice.config :as config]))
 
@@ -18,5 +18,5 @@
 (def get-minio-prefix config/get-minio-prefix)
 
 (defn get-minio-link
-  [subdir]
-  (fs-lib/join-paths (get-minio-prefix) subdir))
+  [filepath]
+  (str (get-minio-prefix) (get-relative-filepath filepath :filemode false)))
