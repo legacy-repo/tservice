@@ -295,6 +295,6 @@
         endpoints (merge-map-array methods)]
     {:routes (map (fn [[k v]] [(str (get-endpoint-prefix plugin-type)
                                     "/"
-                                    (name k))
+                                    (symbol k))  ;; (name :test/:sample_id) will return :sample_id, but we need test/:sample_id
                                (merge {:tags [(get-tag plugin-type)]}
                                       v)]) endpoints)}))
