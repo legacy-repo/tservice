@@ -9,7 +9,7 @@
             :swagger/default "0.6.0-1-39ac444-SNAPSHOT"
             :reason "Version number is not valid."}))
 
-(s/def ::id
+(s/def ::migration_id
   (st/spec {:spec number?
             :type :number
             :description "Migration Id."
@@ -17,10 +17,10 @@
             :reason "Migration id is not valid."}))
 
 (s/def ::applied
-  (st/spec {:spec number?
-            :type :number
+  (st/spec {:spec (partial instance? java.time.LocalDateTime)
+            :type :string
             :description "Applied Id."
-            :swagger/default 1631880547270
+            :swagger/default "2022-03-03T08:56:35.490"
             :reason "Applied id is not valid."}))
 
 (s/def ::description
@@ -32,7 +32,7 @@
 
 (def db-version
   "A spec for the db version."
-  (s/keys :req-un [::id ::applied ::description]
+  (s/keys :req-un [::migration_id ::applied ::description]
           :opt-un []))
 
 (s/def ::db_version (s/coll-of db-version))

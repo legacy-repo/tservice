@@ -25,7 +25,7 @@
 
 (defn get-db-version []
   (let [db-version (jdbc/execute! (:datasource *db*)
-                                  ["SELECT id, applied, description FROM schema_migrations ORDER BY applied;"]
+                                  ["SELECT id as migration_id, applied, description FROM schema_migrations ORDER BY applied;"]
                                   {:builder-fn rs/as-unqualified-maps})]
     db-version))
 
